@@ -82,7 +82,7 @@ const summarizeIndonesianTextFlow = ai.defineFlow(
         instruction = 'Buat ringkasan singkat dari teks, tidak lebih dari 30% dari panjang aslinya, sambil mempertahankan informasi utama.';
         break;
       case 'keyPoints':
-        instruction = 'Ekstrak poin-poin penting dari teks sebagai daftar berpoin menggunakan tanda hubung (-).';
+        instruction = 'Ekstrak poin-poin penting dari teks sebagai daftar berpoin. Gunakan karakter bullet point (•) untuk setiap poin, bukan tanda hubung (-).';
         break;
       case 'questions':
         instruction = 'Buat daftar pertanyaan penting berdasarkan teks sebagai daftar bernomor.';
