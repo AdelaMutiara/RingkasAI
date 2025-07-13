@@ -3,7 +3,7 @@ import './globals.css';
 import { Toaster } from '@/components/ui/toaster';
 
 export const metadata: Metadata = {
-  title: 'AI Note Summarize',
+  title: 'RingkasAI',
   description: 'Peringkas Teks Bahasa Indonesia Bertenaga AI',
 };
 

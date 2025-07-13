@@ -26,7 +26,7 @@ export default function Summarizer() {
               <path d="M9 17h2" />
             </svg>
             <span className="font-bold sm:inline-block font-headline text-lg">
-              AI Note Summarize
+              RingkasAI
             </span>
           </Link>
           <div className="flex flex-1 items-center justify-end space-x-2">

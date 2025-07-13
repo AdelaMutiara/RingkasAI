@@ -138,10 +138,10 @@ export function SummarizerPage() {
     <div className="container max-w-4xl mx-auto p-4 md:py-12">
       <div className="text-center">
         <h1 className="text-3xl md:text-4xl font-bold font-headline tracking-tight">
-          AI-Powered Indonesian Text Summarizer
+          Asisten Pintar untuk Ringkasan Teks Bahasa Indonesia Anda
         </h1>
         <p className="text-muted-foreground mt-2">
-          Get a concise summary, key points, or questions from your Indonesian text in seconds.
+          Dapatkan Intisari, Poin Penting, atau Pertanyaan Kunci dari Teks Berbahasa Indonesia dalam Sekejap.
         </p>
       </div>
 

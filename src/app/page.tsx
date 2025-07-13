@@ -29,7 +29,7 @@ export default function LandingPage() {
               <path d="M9 17h2" />
             </svg>
             <span className="font-bold sm:inline-block font-headline text-lg">
-              AI Note Summarize
+              RingkasAI
             </span>
           </Link>
           <div className="flex flex-1 items-center justify-end space-x-2">
@@ -62,7 +62,7 @@ export default function LandingPage() {
             <div className="text-center mb-12">
               <h2 className="text-3xl md:text-4xl font-bold font-headline">Fitur Unggulan</h2>
               <p className="mt-2 text-muted-foreground">
-                Apa yang membuat AI Note Summarize pilihan terbaik.
+                Apa yang membuat RingkasAI pilihan terbaik.
               </p>
             </div>
             <div className="grid md:grid-cols-3 gap-8">
@@ -108,7 +108,7 @@ export default function LandingPage() {
             <div className="container text-center">
                 <h2 className="text-3xl md:text-4xl font-bold font-headline">Siap untuk Memulai?</h2>
                 <p className="mt-4 max-w-2xl mx-auto text-lg text-muted-foreground">
-                    Coba AI Note Summarize sekarang dan rasakan kemudahan meringkas teks.
+                    Coba RingkasAI sekarang dan rasakan kemudahan meringkas teks.
                 </p>
                 <div className="mt-8">
                      <Button asChild size="lg" className="shadow-lg hover:shadow-xl transition-shadow">
