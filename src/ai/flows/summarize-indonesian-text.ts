@@ -70,7 +70,7 @@ const summarizeIndonesianTextPrompt = ai.definePrompt({
   output: {schema: z.object({
     output: z.string()
   })},
-  prompt: `Anda adalah asisten AI yang berspesialisasi dalam memproses teks berbahasa Indonesia. Tugas Anda adalah memproses teks yang diberikan berdasarkan instruksi. Pastikan output yang Anda hasilkan juga dalam Bahasa Indonesia.
+  prompt: `Anda adalah asisten AI yang berspesialisasi dalam memproses teks berbahasa Indonesia. Tugas Anda adalah memproses teks yang diberikan berdasarkan instruksi. Pastikan output yang Anda hasilkan juga dalam Bahasa Indonesia dan hanya berupa teks biasa (plain text) tanpa format Markdown (seperti ** atau #).
 
 Teks Asli: {{{text}}}
 
@@ -101,10 +101,10 @@ const summarizeIndonesianTextFlow = ai.defineFlow(
         instruction = 'Buat ringkasan singkat dari teks, tidak lebih dari 30% dari panjang aslinya, sambil mempertahankan informasi utama.';
         break;
       case 'keyPoints':
-        instruction = 'Ekstrak poin-poin penting dari teks sebagai daftar berpoin.';
+        instruction = 'Ekstrak poin-poin penting dari teks sebagai daftar berpoin menggunakan tanda hubung (-).';
         break;
       case 'questions':
-        instruction = 'Buat daftar pertanyaan penting berdasarkan teks.';
+        instruction = 'Buat daftar pertanyaan penting berdasarkan teks sebagai daftar bernomor.';
         break;
     }
 
