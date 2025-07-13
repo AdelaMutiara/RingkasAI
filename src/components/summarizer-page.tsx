@@ -11,7 +11,6 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import * as pdfjs from "pdfjs-dist";
 
 // Required for pdfjs-dist
@@ -189,20 +188,17 @@ export function SummarizerPage() {
             
             <div>
               <Label className="text-base font-semibold">Output Format</Label>
-              <RadioGroup value={outputFormat} onValueChange={(v) => setOutputFormat(v as OutputFormat)} className="flex items-center space-x-4 mt-2">
-                  <div className="flex items-center space-x-2">
-                      <RadioGroupItem value="summary" id="summary" />
-                      <Label htmlFor="summary">Ringkasan</Label>
-                  </div>
-                  <div className="flex items-center space-x-2">
-                      <RadioGroupItem value="keyPoints" id="keyPoints" />
-                      <Label htmlFor="keyPoints">Poin Penting</Label>
-                  </div>
-                  <div className="flex items-center space-x-2">
-                      <RadioGroupItem value="questions" id="questions" />
-                      <Label htmlFor="questions">Pertanyaan</Label>
-                  </div>
-              </RadioGroup>
+               <div className="flex flex-wrap items-center gap-2 mt-2">
+                    <Button type="button" variant={outputFormat === 'summary' ? 'default' : 'outline'} onClick={() => setOutputFormat('summary')}>
+                        Ringkasan
+                    </Button>
+                    <Button type="button" variant={outputFormat === 'keyPoints' ? 'default' : 'outline'} onClick={() => setOutputFormat('keyPoints')}>
+                        Poin Penting
+                    </Button>
+                    <Button type="button" variant={outputFormat === 'questions' ? 'default' : 'outline'} onClick={() => setOutputFormat('questions')}>
+                        Pertanyaan
+                    </Button>
+                </div>
             </div>
 
             <div className="text-center">
