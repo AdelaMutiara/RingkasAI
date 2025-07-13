@@ -80,7 +80,7 @@ const fetchTextFromUrl = ai.defineTool(
 const fetchTranscriptFromYouTubeUrl = ai.defineTool(
   {
     name: 'fetchTranscriptFromYouTubeUrl',
-    description: 'Fetches the transcript from a given YouTube video URL.',
+    description: 'Fetches the transcript from a given YouTube video URL. Use this tool if the URL is a YouTube link.',
     inputSchema: z.object({
       url: z.string().describe('The YouTube URL to fetch the transcript from.'),
     }),
@@ -104,21 +104,7 @@ const summarizeIndonesianTextFlow = ai.defineFlow(
     outputSchema: SummarizeIndonesianTextOutputSchema,
   },
   async (input) => {
-    let textToProcess = input.text || '';
-
-    if (input.url) {
-      const isYouTubeUrl = /^(https?:\/\/)?(www\.)?(youtube\.com|youtu\.?be)\/.+$/.test(input.url);
-      if (isYouTubeUrl) {
-        textToProcess = await fetchTranscriptFromYouTubeUrl({ url: input.url });
-      } else {
-        textToProcess = await fetchTextFromUrl({url: input.url});
-      }
-    }
-
-    if (!textToProcess) {
-      throw new Error('No text to process. Please provide text or a valid URL.');
-    }
-
+    
     let instruction = '';
     switch (input.outputFormat) {
       case 'summary':
@@ -131,23 +117,42 @@ const summarizeIndonesianTextFlow = ai.defineFlow(
         instruction = 'Buat daftar pertanyaan penting berdasarkan teks sebagai daftar bernomor.';
         break;
     }
+    
+    const textToProcess = input.text || '';
+    const urlToProcess = input.url || '';
 
-    const prompt = `Anda adalah asisten AI yang berspesialisasi dalam memproses teks berbahasa Indonesia. Tugas Anda adalah memproses teks yang diberikan berdasarkan instruksi. Pastikan output yang Anda hasilkan juga dalam Bahasa Indonesia dan hanya berupa teks biasa (plain text) tanpa format Markdown (seperti ** atau #).
+    const prompt = `You are an AI assistant specializing in processing Indonesian text. Your task is to process the given text based on the instruction. Ensure your output is also in Indonesian and is only plain text without Markdown formatting (like ** or #).
 
-Teks Asli: ${textToProcess}
+If a URL is provided, use the available tools to fetch the content. If it's a YouTube URL, use the YouTube transcript tool. Otherwise, use the general URL fetching tool. If both text and URL are provided, prioritize the text. Once you have the text, process it.
 
-Instruksi Anda: ${instruction}
+Original Text: ${textToProcess}
+URL: ${urlToProcess}
+
+Your Instruction: ${instruction}
 Output:`;
 
-    const response = await ai.generate({
+    const llmResponse = await ai.generate({
       prompt: prompt,
       tools: [fetchTextFromUrl, fetchTranscriptFromYouTubeUrl, copyeditTool],
-      toolChoice: 'tool:copyedit'
+      toolChoice: 'auto'
     });
-    
-    const outputText = response.text;
 
-    const wordCountOriginal = textToProcess.split(/\s+/).filter(Boolean).length;
+    const outputText = llmResponse.text;
+    
+    // We need to get the original text for word count.
+    // If a tool was used, its output is the original text.
+    // If not, the original input text was used.
+    let originalTextForCount = textToProcess;
+    const toolOutputs = llmResponse.history.filter(m => m.role === 'tool');
+    if (toolOutputs.length > 0) {
+      originalTextForCount = toolOutputs.map(t => t.content[0].text || '').join(' ');
+    }
+
+    if (!originalTextForCount && !outputText) {
+       throw new Error('No text to process. Please provide text or a valid URL.');
+    }
+
+    const wordCountOriginal = originalTextForCount.split(/\s+/).filter(Boolean).length;
     const wordCountSummary = outputText.split(/\s+/).filter(Boolean).length;
 
     return {
