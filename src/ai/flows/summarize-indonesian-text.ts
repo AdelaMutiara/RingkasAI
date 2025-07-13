@@ -59,7 +59,7 @@ const fetchTextFromUrl = ai.defineTool(
     inputSchema: z.object({
       url: z.string().describe('The URL to fetch content from.'),
     }),
-    outputSchema: z.string(),
+    outputSchema: z.object({ output: z.string() }),
   },
   async (input) => {
     try {
@@ -71,10 +71,10 @@ const fetchTextFromUrl = ai.defineTool(
       const dom = new JSDOM(html);
       // Remove script and style elements
       dom.window.document.querySelectorAll('script, style').forEach((el) => el.remove());
-      return dom.window.document.body.textContent || '';
+      return { output: dom.window.document.body.textContent || '' };
     } catch (error) {
       console.error('Error fetching URL:', error);
-      return 'Failed to fetch content from URL.';
+      return { output: 'Failed to fetch content from URL.' };
     }
   }
 );
@@ -86,15 +86,15 @@ const fetchTranscriptFromYouTubeUrl = ai.defineTool(
     inputSchema: z.object({
       url: z.string().describe('The YouTube URL to fetch the transcript from.'),
     }),
-    outputSchema: z.string(),
+    outputSchema: z.object({ output: z.string() }),
   },
   async ({ url }) => {
     try {
       const transcript = await YoutubeTranscript.fetchTranscript(url);
-      return transcript.map((item) => item.text).join(' ');
+      return { output: transcript.map((item) => item.text).join(' ') };
     } catch (error) {
       console.error('Error fetching YouTube transcript:', error);
-      return 'Failed to fetch transcript from YouTube URL. The video might not have transcripts available.';
+      return { output: 'Failed to fetch transcript from YouTube URL. The video might not have transcripts available.' };
     }
   }
 );
@@ -145,12 +145,25 @@ Output:`;
     // If a tool was used, its output is the original text.
     // If not, the original input text was used.
     let originalTextForCount = textToProcess;
-    const toolOutputs = llmResponse.history.filter(m => m.role === 'tool');
-    if (toolOutputs.length > 0) {
-      originalTextForCount = toolOutputs.map(t => t.content[0].text || '').join(' ');
+    if (llmResponse.history) {
+        const toolOutputs = llmResponse.history
+          .filter(m => m.role === 'tool');
+    
+        if (toolOutputs.length > 0) {
+          originalTextForCount = toolOutputs
+            .map(t => {
+                const part = t.content[0];
+                if ('toolResponse' in part && typeof part.toolResponse.output === 'object' && part.toolResponse.output !== null && 'output' in part.toolResponse.output) {
+                    return (part.toolResponse.output as { output: string }).output;
+                }
+                return '';
+            })
+            .join(' ');
+        }
     }
 
-    if (!originalTextForCount && !outputText) {
+
+    if (!originalTextForCount && urlToProcess && !outputText) {
        throw new Error('No text to process. Please provide text or a valid URL.');
     }
 
