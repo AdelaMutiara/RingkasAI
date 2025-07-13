@@ -40,13 +40,15 @@ const copyeditTool = ai.defineTool(
     inputSchema: z.object({
       text: z.string().describe('The text to be edited.'),
     }),
-    outputSchema: z.string(),
+    outputSchema: z.object({
+      output: z.string(),
+    }),
   },
   async (input) => {
     // In a real scenario, this could involve more complex editing logic.
     // For this example, we'll just return the text as is,
     // relying on the model's intelligence to use the tool correctly.
-    return input.text.trim();
+    return { output: input.text.trim() };
   }
 );
 
