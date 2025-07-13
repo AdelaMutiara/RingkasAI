@@ -59,25 +59,6 @@ const fetchTextFromUrl = ai.defineTool(
   }
 );
 
-
-const summarizeIndonesianTextPrompt = ai.definePrompt({
-  name: 'summarizeIndonesianTextPrompt',
-  tools: [fetchTextFromUrl],
-  input: {schema: z.object({
-    text: z.string(),
-    instruction: z.string(),
-  })},
-  output: {schema: z.object({
-    output: z.string()
-  })},
-  prompt: `Anda adalah asisten AI yang berspesialisasi dalam memproses teks berbahasa Indonesia. Tugas Anda adalah memproses teks yang diberikan berdasarkan instruksi. Pastikan output yang Anda hasilkan juga dalam Bahasa Indonesia dan hanya berupa teks biasa (plain text) tanpa format Markdown (seperti ** atau #).
-
-Teks Asli: {{{text}}}
-
-Instruksi Anda: {{{instruction}}}
-Output:`,
-});
-
 const summarizeIndonesianTextFlow = ai.defineFlow(
   {
     name: 'summarizeIndonesianTextFlow',
@@ -108,17 +89,25 @@ const summarizeIndonesianTextFlow = ai.defineFlow(
         break;
     }
 
+    const prompt = `Anda adalah asisten AI yang berspesialisasi dalam memproses teks berbahasa Indonesia. Tugas Anda adalah memproses teks yang diberikan berdasarkan instruksi. Pastikan output yang Anda hasilkan juga dalam Bahasa Indonesia dan hanya berupa teks biasa (plain text) tanpa format Markdown (seperti ** atau #).
 
-    const {output} = await summarizeIndonesianTextPrompt({
-      text: textToProcess,
-      instruction: instruction,
+Teks Asli: ${textToProcess}
+
+Instruksi Anda: ${instruction}
+Output:`;
+
+    const response = await ai.generate({
+      prompt: prompt,
+      tools: [fetchTextFromUrl],
     });
+    
+    const outputText = response.text;
 
     const wordCountOriginal = textToProcess.split(/\s+/).filter(Boolean).length;
-    const wordCountSummary = output!.output.split(/\s+/).filter(Boolean).length;
+    const wordCountSummary = outputText.split(/\s+/).filter(Boolean).length;
 
     return {
-      output: output!.output,
+      output: outputText,
       wordCountOriginal,
       wordCountSummary,
       outputFormat: input.outputFormat
