@@ -74,7 +74,7 @@ const fetchTextFromUrl = ai.defineTool(
       return { output: dom.window.document.body.textContent || '' };
     } catch (error) {
       console.error('Error fetching URL:', error);
-      return { output: 'Failed to fetch content from URL.' };
+      return { output: 'Gagal mengambil konten dari URL.' };
     }
   }
 );
@@ -94,13 +94,13 @@ const fetchTranscriptFromYouTubeUrl = ai.defineTool(
       const transcriptText = transcript.map((item) => item.text).join(' ').trim();
       
       if (!transcriptText) {
-          return { output: 'Failed to process transcript. The video transcript is empty or could not be accessed.' };
+          return { output: 'Gagal memproses transkrip. Transkrip video ini kosong atau tidak dapat diakses.' };
       }
       
       return { output: transcriptText };
     } catch (error) {
       console.error('Error fetching YouTube transcript:', error);
-      return { output: 'Failed to fetch transcript from YouTube URL. The video might not have transcripts available or they are disabled.' };
+      return { output: 'Gagal mengambil transkrip dari URL YouTube. Video mungkin tidak memiliki transkrip yang tersedia atau fitur transkrip dinonaktifkan.' };
     }
   }
 );
@@ -130,16 +130,17 @@ const summarizeIndonesianTextFlow = ai.defineFlow(
     const textToProcess = input.text || '';
     const urlToProcess = input.url || '';
 
-    const prompt = `You are an AI assistant specializing in processing Indonesian text. Your task is to process the given text based on the instruction. Ensure your output is also in Indonesian and is only plain text without Markdown formatting (like ** or #).
+    const prompt = `Anda adalah asisten AI yang ahli dalam memproses teks berbahasa Indonesia. Tugas Anda adalah memproses teks atau URL yang diberikan sesuai dengan instruksi.
+PENTING: Seluruh output Anda HARUS dalam Bahasa Indonesia. Jangan pernah menggunakan Bahasa Inggris.
 
-If a URL is provided, use the available tools to fetch the content. If it's a YouTube URL, use the YouTube transcript tool. Otherwise, use the general URL fetching tool. If both text and URL are provided, prioritize the text. Once you have the text, process it.
+Jika URL yang diberikan, gunakan alat yang tersedia untuk mengambil kontennya. Gunakan alat transkrip YouTube jika itu adalah link YouTube.
+Jika sebuah alat mengembalikan pesan error (misalnya "Gagal mengambil..."), sampaikan pesan error tersebut kepada pengguna DALAM BAHASA INDONESIA sebagai jawaban akhir Anda. Jangan mencoba memprosesnya lebih lanjut.
+Jika teks dan URL diberikan, prioritaskan teks yang diberikan.
 
-If a tool returns an error message like "Failed to fetch", output that error message directly to the user.
-
-Original Text: ${textToProcess}
+Teks Asli: ${textToProcess}
 URL: ${urlToProcess}
 
-Your Instruction: ${instruction}
+Instruksi Anda: ${instruction}
 Output:`;
 
     const llmResponse = await ai.generate({
