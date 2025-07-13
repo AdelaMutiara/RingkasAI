@@ -1,6 +1,6 @@
 'use server';
 /**
- * @fileOverview An AI agent to summarize Indonesian text.
+ * @fileOverview An AI agent to summarize Indonesian text from various sources.
  *
  * - summarizeIndonesianText - A function that summarizes Indonesian text.
  * - SummarizeIndonesianTextInput - The input type for the summarizeIndonesianText function.
@@ -9,16 +9,22 @@
 
 import {ai} from '@/ai/genkit';
 import {z} from 'genkit';
+import {JSDOM} from 'jsdom';
+
+const OutputFormatSchema = z.enum(['summary', 'keyPoints', 'questions']);
 
 const SummarizeIndonesianTextInputSchema = z.object({
-  text: z.string().describe('The Indonesian text to summarize.'),
+  text: z.string().optional().describe('The Indonesian text to summarize.'),
+  url: z.string().optional().describe('The URL of the Indonesian text to summarize.'),
+  outputFormat: OutputFormatSchema.default('summary'),
 });
 export type SummarizeIndonesianTextInput = z.infer<typeof SummarizeIndonesianTextInputSchema>;
 
 const SummarizeIndonesianTextOutputSchema = z.object({
-  summary: z.string().describe('The summarized Indonesian text.'),
+  output: z.string().describe('The processed output based on the selected format.'),
   wordCountOriginal: z.number().describe('The word count of the original text.'),
   wordCountSummary: z.number().describe('The word count of the summarized text.'),
+  outputFormat: OutputFormatSchema.default('summary'),
 });
 export type SummarizeIndonesianTextOutput = z.infer<typeof SummarizeIndonesianTextOutputSchema>;
 
@@ -26,29 +32,62 @@ export async function summarizeIndonesianText(input: SummarizeIndonesianTextInpu
   return summarizeIndonesianTextFlow(input);
 }
 
-const copyedit = ai.defineTool({
-  name: 'copyedit',
-  description: 'Applies a professional editing style to the provided text.',
-  inputSchema: z.object({
-    text: z.string().describe('The text to be copyedited.'),
-  }),
-  outputSchema: z.string(),
-},
-async (input) => {
-  // Placeholder implementation - replace with actual copyediting logic
-  return `Copyedited: ${input.text}`;
-});
+const fetchTextFromUrl = ai.defineTool(
+  {
+    name: 'fetchTextFromUrl',
+    description: 'Fetches the text content from a given URL.',
+    inputSchema: z.object({
+      url: z.string().describe('The URL to fetch content from.'),
+    }),
+    outputSchema: z.string(),
+  },
+  async (input) => {
+    try {
+      const response = await fetch(input.url);
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+      const html = await response.text();
+      const dom = new JSDOM(html);
+      // Remove script and style elements
+      dom.window.document.querySelectorAll('script, style').forEach((el) => el.remove());
+      return dom.window.document.body.textContent || '';
+    } catch (error) {
+      console.error('Error fetching URL:', error);
+      return 'Failed to fetch content from URL.';
+    }
+  }
+);
+
 
 const summarizeIndonesianTextPrompt = ai.definePrompt({
   name: 'summarizeIndonesianTextPrompt',
-  tools: [copyedit],
-  input: {schema: SummarizeIndonesianTextInputSchema},
-  output: {schema: SummarizeIndonesianTextOutputSchema},
-  prompt: `You are an AI summarizer specializing in condensing Indonesian text to no more than 30% of its original length, while maintaining key information. Always apply an appropriate editing style to the results using the copyedit tool.
+  tools: [fetchTextFromUrl],
+  input: {schema: z.object({
+    text: z.string(),
+    outputFormat: OutputFormatSchema,
+  })},
+  output: {schema: z.object({
+    output: z.string()
+  })},
+  prompt: `You are an AI assistant specializing in processing Indonesian text. Your task is to process the provided text based on the desired output format.
 
 Original Text: {{{text}}}
 
-Summary:`,
+{{#if (eq outputFormat "summary")}}
+Your instruction: Create a concise summary of the text, no more than 30% of its original length, while maintaining key information.
+Output:
+{{/if}}
+
+{{#if (eq outputFormat "keyPoints")}}
+Your instruction: Extract the key points from the text as a bulleted list.
+Output:
+{{/if}}
+
+{{#if (eq outputFormat "questions")}}
+Your instruction: Generate a list of important questions based on the text.
+Output:
+{{/if}}`,
 });
 
 const summarizeIndonesianTextFlow = ai.defineFlow(
@@ -57,17 +96,30 @@ const summarizeIndonesianTextFlow = ai.defineFlow(
     inputSchema: SummarizeIndonesianTextInputSchema,
     outputSchema: SummarizeIndonesianTextOutputSchema,
   },
-  async input => {
-    const {output} = await summarizeIndonesianTextPrompt(input);
+  async (input) => {
+    let textToProcess = input.text || '';
 
-    // Calculate word counts
-    const wordCountOriginal = input.text.split(/\s+/).length;
-    const wordCountSummary = output!.summary.split(/\s+/).length;
+    if (input.url) {
+      textToProcess = await fetchTextFromUrl({url: input.url});
+    }
+
+    if (!textToProcess) {
+      throw new Error('No text to process. Please provide text or a valid URL.');
+    }
+
+    const {output} = await summarizeIndonesianTextPrompt({
+      text: textToProcess,
+      outputFormat: input.outputFormat
+    });
+
+    const wordCountOriginal = textToProcess.split(/\s+/).filter(Boolean).length;
+    const wordCountSummary = output!.output.split(/\s+/).filter(Boolean).length;
 
     return {
-      summary: output!.summary,
-      wordCountOriginal: wordCountOriginal,
-      wordCountSummary: wordCountSummary,
+      output: output!.output,
+      wordCountOriginal,
+      wordCountSummary,
+      outputFormat: input.outputFormat
     };
   }
 );
