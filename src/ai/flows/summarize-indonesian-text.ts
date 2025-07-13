@@ -65,29 +65,17 @@ const summarizeIndonesianTextPrompt = ai.definePrompt({
   tools: [fetchTextFromUrl],
   input: {schema: z.object({
     text: z.string(),
-    outputFormat: OutputFormatSchema,
+    instruction: z.string(),
   })},
   output: {schema: z.object({
     output: z.string()
   })},
-  prompt: `You are an AI assistant specializing in processing Indonesian text. Your task is to process the provided text based on the desired output format.
+  prompt: `You are an AI assistant specializing in processing Indonesian text. Your task is to process the provided text based on the instruction.
 
 Original Text: {{{text}}}
 
-{{#if (eq outputFormat "summary")}}
-Your instruction: Create a concise summary of the text, no more than 30% of its original length, while maintaining key information.
-Output:
-{{/if}}
-
-{{#if (eq outputFormat "keyPoints")}}
-Your instruction: Extract the key points from the text as a bulleted list.
-Output:
-{{/if}}
-
-{{#if (eq outputFormat "questions")}}
-Your instruction: Generate a list of important questions based on the text.
-Output:
-{{/if}}`,
+Your instruction: {{{instruction}}}
+Output:`,
 });
 
 const summarizeIndonesianTextFlow = ai.defineFlow(
@@ -107,9 +95,23 @@ const summarizeIndonesianTextFlow = ai.defineFlow(
       throw new Error('No text to process. Please provide text or a valid URL.');
     }
 
+    let instruction = '';
+    switch (input.outputFormat) {
+      case 'summary':
+        instruction = 'Create a concise summary of the text, no more than 30% of its original length, while maintaining key information.';
+        break;
+      case 'keyPoints':
+        instruction = 'Extract the key points from the text as a bulleted list.';
+        break;
+      case 'questions':
+        instruction = 'Generate a list of important questions based on the text.';
+        break;
+    }
+
+
     const {output} = await summarizeIndonesianTextPrompt({
       text: textToProcess,
-      outputFormat: input.outputFormat
+      instruction: instruction,
     });
 
     const wordCountOriginal = textToProcess.split(/\s+/).filter(Boolean).length;
