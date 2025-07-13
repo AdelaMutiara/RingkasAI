@@ -138,7 +138,7 @@ export function SummarizerPage() {
     <div className="container max-w-4xl mx-auto p-4 md:py-12">
       <div className="text-center">
         <h1 className="text-3xl md:text-4xl font-bold font-headline tracking-tight">
-          Asisten Pintar untuk Ringkasan Teks Bahasa Indonesia Anda
+          Asisten Pintar Untuk Ringkasan Teks Apapun
         </h1>
         <p className="text-muted-foreground mt-2">
           Dapatkan Intisari, Poin Penting, atau Pertanyaan Kunci dari Teks Berbahasa Indonesia dalam Sekejap.
