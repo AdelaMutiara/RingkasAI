@@ -5,7 +5,7 @@ import { summarizeIndonesianText, SummarizeIndonesianTextOutput } from "@/ai/flo
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Loader2, Copy, Check, Upload, Link as LinkIcon, FileText } from "lucide-react";
+import { Loader2, Copy, Check, Upload, Link as LinkIcon, FileText, Sparkles } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -138,10 +138,10 @@ export function SummarizerPage() {
     <div className="container max-w-4xl mx-auto p-4 md:py-12">
       <div className="text-center">
         <h1 className="text-3xl md:text-4xl font-bold font-headline tracking-tight">
-          Peringkas Teks Bahasa Indonesia Bertenaga AI
+          AI-Powered Indonesian Text Summarizer
         </h1>
         <p className="text-muted-foreground mt-2">
-          Dapatkan ringkasan, poin penting, atau pertanyaan dari teks Anda dalam hitungan detik.
+          Get a concise summary, key points, or questions from your Indonesian text in seconds.
         </p>
       </div>
 
@@ -201,15 +201,18 @@ export function SummarizerPage() {
                 </div>
             </div>
 
-            <div className="text-center">
-              <Button type="submit" disabled={isPending} size="lg" className="shadow-lg hover:shadow-xl transition-shadow w-full sm:w-auto">
+            <div className="flex justify-end">
+              <Button type="submit" disabled={isPending} size="lg" className="shadow-lg hover:shadow-xl transition-shadow">
                 {isPending ? (
                   <>
                     <Loader2 className="mr-2 h-5 w-5 animate-spin" />
                     Memproses...
                   </>
                 ) : (
-                  "Proses"
+                  <>
+                    <Sparkles className="mr-2 h-5 w-5" />
+                    Generate
+                  </>
                 )}
               </Button>
             </div>
