@@ -70,11 +70,11 @@ const summarizeIndonesianTextPrompt = ai.definePrompt({
   output: {schema: z.object({
     output: z.string()
   })},
-  prompt: `You are an AI assistant specializing in processing Indonesian text. Your task is to process the provided text based on the instruction.
+  prompt: `Anda adalah asisten AI yang berspesialisasi dalam memproses teks berbahasa Indonesia. Tugas Anda adalah memproses teks yang diberikan berdasarkan instruksi. Pastikan output yang Anda hasilkan juga dalam Bahasa Indonesia.
 
-Original Text: {{{text}}}
+Teks Asli: {{{text}}}
 
-Your instruction: {{{instruction}}}
+Instruksi Anda: {{{instruction}}}
 Output:`,
 });
 
@@ -98,13 +98,13 @@ const summarizeIndonesianTextFlow = ai.defineFlow(
     let instruction = '';
     switch (input.outputFormat) {
       case 'summary':
-        instruction = 'Create a concise summary of the text, no more than 30% of its original length, while maintaining key information.';
+        instruction = 'Buat ringkasan singkat dari teks, tidak lebih dari 30% dari panjang aslinya, sambil mempertahankan informasi utama.';
         break;
       case 'keyPoints':
-        instruction = 'Extract the key points from the text as a bulleted list.';
+        instruction = 'Ekstrak poin-poin penting dari teks sebagai daftar berpoin.';
         break;
       case 'questions':
-        instruction = 'Generate a list of important questions based on the text.';
+        instruction = 'Buat daftar pertanyaan penting berdasarkan teks.';
         break;
     }
 
