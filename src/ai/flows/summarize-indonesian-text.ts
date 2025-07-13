@@ -32,6 +32,23 @@ export async function summarizeIndonesianText(input: SummarizeIndonesianTextInpu
   return summarizeIndonesianTextFlow(input);
 }
 
+const copyeditTool = ai.defineTool(
+  {
+    name: 'copyedit',
+    description: 'Edits and refines the provided text for clarity, conciseness, and style.',
+    inputSchema: z.object({
+      text: z.string().describe('The text to be edited.'),
+    }),
+    outputSchema: z.string(),
+  },
+  async (input) => {
+    // In a real scenario, this could involve more complex editing logic.
+    // For this example, we'll just return the text as is,
+    // relying on the model's intelligence to use the tool correctly.
+    return input.text.trim();
+  }
+);
+
 const fetchTextFromUrl = ai.defineTool(
   {
     name: 'fetchTextFromUrl',
@@ -98,7 +115,8 @@ Output:`;
 
     const response = await ai.generate({
       prompt: prompt,
-      tools: [fetchTextFromUrl],
+      tools: [fetchTextFromUrl, copyeditTool],
+      toolChoice: 'tool:copyedit'
     });
     
     const outputText = response.text;
