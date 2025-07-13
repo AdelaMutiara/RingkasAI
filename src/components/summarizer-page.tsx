@@ -179,9 +179,9 @@ export function SummarizerPage() {
               </TabsContent>
               <TabsContent value="url" className="mt-4">
                   <div className="space-y-2">
-                    <Label htmlFor="url-input">URL Situs Web</Label>
+                    <Label htmlFor="url-input">URL Situs Web atau YouTube</Label>
                     <Input id="url-input" type="url" placeholder="https://example.com/article" value={url} onChange={(e) => setUrl(e.target.value)} />
-                    <p className="text-xs text-muted-foreground">Konten teks akan diambil dari halaman.</p>
+                    <p className="text-xs text-muted-foreground">Konten teks dari artikel atau transkrip video akan diambil dari halaman.</p>
                   </div>
               </TabsContent>
             </Tabs>

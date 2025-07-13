@@ -10,6 +10,7 @@
 import {ai} from '@/ai/genkit';
 import {z} from 'genkit';
 import {JSDOM} from 'jsdom';
+import { YoutubeTranscript } from 'youtube-transcript';
 
 const OutputFormatSchema = z.enum(['summary', 'keyPoints', 'questions']);
 
@@ -52,7 +53,7 @@ const copyeditTool = ai.defineTool(
 const fetchTextFromUrl = ai.defineTool(
   {
     name: 'fetchTextFromUrl',
-    description: 'Fetches the text content from a given URL.',
+    description: 'Fetches the text content from a given website URL.',
     inputSchema: z.object({
       url: z.string().describe('The URL to fetch content from.'),
     }),
@@ -76,6 +77,26 @@ const fetchTextFromUrl = ai.defineTool(
   }
 );
 
+const fetchTranscriptFromYouTubeUrl = ai.defineTool(
+  {
+    name: 'fetchTranscriptFromYouTubeUrl',
+    description: 'Fetches the transcript from a given YouTube video URL.',
+    inputSchema: z.object({
+      url: z.string().describe('The YouTube URL to fetch the transcript from.'),
+    }),
+    outputSchema: z.string(),
+  },
+  async ({ url }) => {
+    try {
+      const transcript = await YoutubeTranscript.fetchTranscript(url);
+      return transcript.map((item) => item.text).join(' ');
+    } catch (error) {
+      console.error('Error fetching YouTube transcript:', error);
+      return 'Failed to fetch transcript from YouTube URL. The video might not have transcripts available.';
+    }
+  }
+);
+
 const summarizeIndonesianTextFlow = ai.defineFlow(
   {
     name: 'summarizeIndonesianTextFlow',
@@ -86,7 +107,12 @@ const summarizeIndonesianTextFlow = ai.defineFlow(
     let textToProcess = input.text || '';
 
     if (input.url) {
-      textToProcess = await fetchTextFromUrl({url: input.url});
+      const isYouTubeUrl = /^(https?:\/\/)?(www\.)?(youtube\.com|youtu\.?be)\/.+$/.test(input.url);
+      if (isYouTubeUrl) {
+        textToProcess = await fetchTranscriptFromYouTubeUrl({ url: input.url });
+      } else {
+        textToProcess = await fetchTextFromUrl({url: input.url});
+      }
     }
 
     if (!textToProcess) {
@@ -115,7 +141,7 @@ Output:`;
 
     const response = await ai.generate({
       prompt: prompt,
-      tools: [fetchTextFromUrl, copyeditTool],
+      tools: [fetchTextFromUrl, fetchTranscriptFromYouTubeUrl, copyeditTool],
       toolChoice: 'tool:copyedit'
     });
     
