@@ -3,8 +3,8 @@ import './globals.css';
 import { Toaster } from '@/components/ui/toaster';
 
 export const metadata: Metadata = {
-  title: 'AINoteSummarize',
-  description: 'AI-Powered Indonesian Text Summarizer',
+  title: 'AI Note Summarize',
+  description: 'Peringkas Teks Bahasa Indonesia Bertenaga AI',
 };
 
 export default function RootLayout({

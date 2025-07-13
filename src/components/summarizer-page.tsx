@@ -138,7 +138,7 @@ export function SummarizerPage() {
     <div className="container max-w-4xl mx-auto p-4 md:py-12">
       <div className="text-center">
         <h1 className="text-3xl md:text-4xl font-bold font-headline tracking-tight">
-          Peringkas Teks Bahasa Indonesia Berbasis AI
+          Peringkas Teks Bahasa Indonesia Bertenaga AI
         </h1>
         <p className="text-muted-foreground mt-2">
           Dapatkan ringkasan, poin penting, atau pertanyaan dari teks Anda dalam hitungan detik.
@@ -156,14 +156,14 @@ export function SummarizerPage() {
               </TabsList>
               <TabsContent value="text" className="mt-4">
                 <Textarea
-                  placeholder="Paste your long Indonesian text here..."
+                  placeholder="Tempel teks panjang berbahasa Indonesia di sini..."
                   value={inputText}
                   onChange={(e) => setInputText(e.target.value)}
                   className="min-h-[200px] text-base p-4 rounded-lg shadow-inner bg-secondary/50"
                   rows={10}
                 />
                  <p className="text-sm text-muted-foreground text-right pr-2 mt-2">
-                  Word count: {inputText.trim().split(/\s+/).filter(Boolean).length}
+                  Jumlah kata: {inputText.trim().split(/\s+/).filter(Boolean).length}
                 </p>
               </TabsContent>
               <TabsContent value="pdf" className="mt-4">
@@ -171,23 +171,23 @@ export function SummarizerPage() {
                    <Input id="pdf-upload" type="file" accept=".pdf" className="hidden" onChange={(e) => handlePdfUpload(e.target.files![0])} />
                    <Label htmlFor="pdf-upload" className="cursor-pointer flex flex-col items-center gap-2">
                      <Upload className="h-8 w-8 text-muted-foreground" />
-                     <span className="text-primary font-medium">Click to upload a PDF</span>
-                     <p className="text-muted-foreground text-sm">Text will be extracted automatically.</p>
+                     <span className="text-primary font-medium">Klik untuk mengunggah PDF</span>
+                     <p className="text-muted-foreground text-sm">Teks akan diekstraksi secara otomatis.</p>
                    </Label>
                    {fileName && <p className="mt-4 text-sm font-medium text-foreground">File: {fileName}</p>}
                 </div>
               </TabsContent>
               <TabsContent value="url" className="mt-4">
                   <div className="space-y-2">
-                    <Label htmlFor="url-input">Website URL</Label>
+                    <Label htmlFor="url-input">URL Situs Web</Label>
                     <Input id="url-input" type="url" placeholder="https://example.com/article" value={url} onChange={(e) => setUrl(e.target.value)} />
-                    <p className="text-xs text-muted-foreground">The text content will be fetched from the page.</p>
+                    <p className="text-xs text-muted-foreground">Konten teks akan diambil dari halaman.</p>
                   </div>
               </TabsContent>
             </Tabs>
             
             <div>
-              <Label className="text-base font-semibold">Output Format</Label>
+              <Label className="text-base font-semibold">Format Output</Label>
                <div className="flex flex-wrap items-center gap-2 mt-2">
                     <Button type="button" variant={outputFormat === 'summary' ? 'default' : 'outline'} onClick={() => setOutputFormat('summary')}>
                         Ringkasan
@@ -206,10 +206,10 @@ export function SummarizerPage() {
                 {isPending ? (
                   <>
                     <Loader2 className="mr-2 h-5 w-5 animate-spin" />
-                    Processing...
+                    Memproses...
                   </>
                 ) : (
-                  "Generate"
+                  "Proses"
                 )}
               </Button>
             </div>
@@ -241,9 +241,9 @@ export function SummarizerPage() {
                 <CardTitle className="font-headline">{getOutputTitle()}</CardTitle>
                  {result.outputFormat === "summary" && (
                     <div className="text-sm text-muted-foreground mt-2 flex flex-wrap gap-x-4 gap-y-1">
-                        <span>Original: <span className="font-medium text-foreground">{result.wordCountOriginal} words</span></span>
-                        <span>Output: <span className="font-medium text-foreground">{result.wordCountSummary} words</span></span>
-                        <span>Reduction: <span className="font-medium text-foreground">{reductionPercentage}%</span></span>
+                        <span>Asli: <span className="font-medium text-foreground">{result.wordCountOriginal} kata</span></span>
+                        <span>Output: <span className="font-medium text-foreground">{result.wordCountSummary} kata</span></span>
+                        <span>Reduksi: <span className="font-medium text-foreground">{reductionPercentage}%</span></span>
                     </div>
                  )}
               </div>
@@ -260,5 +260,3 @@ export function SummarizerPage() {
     </div>
   );
 }
-
-    
