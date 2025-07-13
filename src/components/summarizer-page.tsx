@@ -138,10 +138,10 @@ export function SummarizerPage() {
     <div className="container max-w-4xl mx-auto p-4 md:py-12">
       <div className="text-center">
         <h1 className="text-3xl md:text-4xl font-bold font-headline tracking-tight">
-          AI-Powered Indonesian Text Summarizer
+          Peringkas Teks Bahasa Indonesia Berbasis AI
         </h1>
         <p className="text-muted-foreground mt-2">
-          Get a concise summary, key points, or questions from your Indonesian text in seconds.
+          Dapatkan ringkasan, poin penting, atau pertanyaan dari teks Anda dalam hitungan detik.
         </p>
       </div>
 
@@ -150,7 +150,7 @@ export function SummarizerPage() {
           <form onSubmit={handleSubmit} className="space-y-6">
             <Tabs value={inputSource} onValueChange={(v) => setInputSource(v as InputSource)} className="w-full">
               <TabsList className="grid w-full grid-cols-3">
-                <TabsTrigger value="text"><FileText className="mr-2 h-4 w-4"/>Text</TabsTrigger>
+                <TabsTrigger value="text"><FileText className="mr-2 h-4 w-4"/>Teks</TabsTrigger>
                 <TabsTrigger value="pdf"><Upload className="mr-2 h-4 w-4"/>PDF</TabsTrigger>
                 <TabsTrigger value="url"><LinkIcon className="mr-2 h-4 w-4"/>URL</TabsTrigger>
               </TabsList>
@@ -260,3 +260,5 @@ export function SummarizerPage() {
     </div>
   );
 }
+
+    
