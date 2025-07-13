@@ -91,13 +91,20 @@ const fetchTranscriptFromYouTubeUrl = ai.defineTool(
   async ({ url }) => {
     try {
       const transcript = await YoutubeTranscript.fetchTranscript(url);
-      return { output: transcript.map((item) => item.text).join(' ') };
+      const transcriptText = transcript.map((item) => item.text).join(' ').trim();
+      
+      if (!transcriptText) {
+          return { output: 'Failed to process transcript. The video transcript is empty or could not be accessed.' };
+      }
+      
+      return { output: transcriptText };
     } catch (error) {
       console.error('Error fetching YouTube transcript:', error);
-      return { output: 'Failed to fetch transcript from YouTube URL. The video might not have transcripts available.' };
+      return { output: 'Failed to fetch transcript from YouTube URL. The video might not have transcripts available or they are disabled.' };
     }
   }
 );
+
 
 const summarizeIndonesianTextFlow = ai.defineFlow(
   {
@@ -126,6 +133,8 @@ const summarizeIndonesianTextFlow = ai.defineFlow(
     const prompt = `You are an AI assistant specializing in processing Indonesian text. Your task is to process the given text based on the instruction. Ensure your output is also in Indonesian and is only plain text without Markdown formatting (like ** or #).
 
 If a URL is provided, use the available tools to fetch the content. If it's a YouTube URL, use the YouTube transcript tool. Otherwise, use the general URL fetching tool. If both text and URL are provided, prioritize the text. Once you have the text, process it.
+
+If a tool returns an error message like "Failed to fetch", output that error message directly to the user.
 
 Original Text: ${textToProcess}
 URL: ${urlToProcess}
