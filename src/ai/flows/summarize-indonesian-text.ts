@@ -11,11 +11,12 @@ import {ai} from '@/ai/genkit';
 import {z} from 'genkit';
 import {JSDOM} from 'jsdom';
 
-const OutputFormatSchema = z.enum(['summary', 'keyPoints', 'questions']);
+const OutputFormatSchema = z.enum(['summary', 'keyPoints', 'questions', 'contentIdeas', 'qa']);
 
 const SummarizeIndonesianTextInputSchema = z.object({
   text: z.string().optional().describe('The Indonesian text to summarize.'),
   url: z.string().optional().describe('The URL of the Indonesian text to summarize.'),
+  question: z.string().optional().describe('User\'s question for the Q&A feature.'),
   outputFormat: OutputFormatSchema.default('summary'),
 });
 export type SummarizeIndonesianTextInput = z.infer<typeof SummarizeIndonesianTextInputSchema>;
@@ -65,7 +66,6 @@ const fetchTextFromUrl = ai.defineTool(
       }
       const html = await response.text();
       const dom = new JSDOM(html);
-      // Remove script and style elements
       dom.window.document.querySelectorAll('script, style').forEach((el) => el.remove());
       const rawText = dom.window.document.body.textContent || '';
       if (!rawText.trim()){
@@ -78,6 +78,7 @@ const fetchTextFromUrl = ai.defineTool(
     }
   }
 );
+
 
 const summarizeIndonesianTextFlow = ai.defineFlow(
   {
@@ -97,6 +98,15 @@ const summarizeIndonesianTextFlow = ai.defineFlow(
         break;
       case 'questions':
         instruction = 'Buat daftar pertanyaan penting berdasarkan teks sebagai daftar bernomor.';
+        break;
+      case 'contentIdeas':
+        instruction = 'Berdasarkan teks yang diberikan, hasilkan 5 ide konten yang menarik dalam format daftar bernomor. Setiap ide harus kreatif dan relevan dengan topik utama teks.';
+        break;
+      case 'qa':
+        if (!input.question) {
+            throw new Error('Pertanyaan diperlukan untuk format Tanya Jawab.');
+        }
+        instruction = `Jawab pertanyaan berikut: "${input.question}" HANYA berdasarkan informasi yang ada di dalam teks yang diberikan. Jika jawaban tidak dapat ditemukan di dalam teks, katakan "Informasi untuk menjawab pertanyaan tersebut tidak ditemukan dalam teks."`;
         break;
     }
     

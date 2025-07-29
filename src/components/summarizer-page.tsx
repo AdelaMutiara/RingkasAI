@@ -5,7 +5,7 @@ import { summarizeIndonesianText, SummarizeIndonesianTextOutput } from "@/ai/flo
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Loader2, Copy, Check, Upload, Link as LinkIcon, FileText, Sparkles } from "lucide-react";
+import { Loader2, Copy, Check, Upload, Link as LinkIcon, FileText, Sparkles, HelpCircle, Lightbulb } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -17,12 +17,13 @@ import * as pdfjs from "pdfjs-dist";
 pdfjs.GlobalWorkerOptions.workerSrc = `//unpkg.com/pdfjs-dist@${pdfjs.version}/build/pdf.worker.min.mjs`;
 
 type InputSource = "text" | "pdf" | "url";
-type OutputFormat = "summary" | "keyPoints" | "questions";
+type OutputFormat = "summary" | "keyPoints" | "questions" | "contentIdeas" | "qa";
 
 export function SummarizerPage() {
   const [inputText, setInputText] = useState("");
   const [url, setUrl] = useState("");
   const [fileName, setFileName] = useState("");
+  const [question, setQuestion] = useState("");
   const [result, setResult] = useState<SummarizeIndonesianTextOutput | null>(null);
   const [isPending, startTransition] = useTransition();
   const { toast } = useToast();
@@ -67,7 +68,7 @@ export function SummarizerPage() {
   const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     let hasInput = false;
-    let payload = { outputFormat };
+    let payload: { outputFormat: OutputFormat, text?: string, url?: string, question?: string } = { outputFormat };
 
     if (inputSource === "text" && inputText.trim()) {
       Object.assign(payload, { text: inputText });
@@ -83,11 +84,25 @@ export function SummarizerPage() {
     if (!hasInput) {
       toast({
         title: "Input Required",
-        description: "Please provide text, a PDF, or a URL to summarize.",
+        description: "Please provide text, a PDF, or a URL to process.",
         variant: "destructive",
       });
       return;
     }
+
+    if (outputFormat === 'qa' && !question.trim()) {
+        toast({
+            title: "Pertanyaan Diperlukan",
+            description: "Silakan masukkan pertanyaan untuk fitur Tanya Jawab.",
+            variant: "destructive",
+        });
+        return;
+    }
+
+    if (outputFormat === 'qa') {
+        payload.question = question;
+    }
+
 
     setResult(null);
     startTransition(async () => {
@@ -95,10 +110,10 @@ export function SummarizerPage() {
         const summaryResult = await summarizeIndonesianText(payload);
         setResult(summaryResult);
       } catch (error) {
-        console.error("Summarization error:", error);
+        console.error("Processing error:", error);
         toast({
           title: "Error",
-          description: "Failed to process the input. Please try again.",
+          description: `Failed to process the input. ${error instanceof Error ? error.message : ''}`,
           variant: "destructive",
         });
         setResult(null);
@@ -124,13 +139,15 @@ export function SummarizerPage() {
     : 0;
 
   const getOutputTitle = () => {
-    if (!result) return "Summary";
+    if (!result) return "Hasil";
     switch(result.outputFormat) {
-      case "keyPoints": return "Key Points";
-      case "questions": return "Generated Questions";
-      case "summary":
+      case "keyPoints": return "Poin Penting";
+      case "questions": return "Pertanyaan yang Dihasilkan";
+      case "summary": return "Ringkasan";
+      case "contentIdeas": return "Ide Konten";
+      case "qa": return "Jawaban";
       default:
-        return "Summary";
+        return "Hasil";
     }
   }
 
@@ -198,8 +215,21 @@ export function SummarizerPage() {
                     <Button type="button" variant={outputFormat === 'questions' ? 'default' : 'outline'} onClick={() => setOutputFormat('questions')}>
                         Pertanyaan
                     </Button>
+                    <Button type="button" variant={outputFormat === 'contentIdeas' ? 'default' : 'outline'} onClick={() => setOutputFormat('contentIdeas')}>
+                        <Lightbulb className="mr-2 h-4 w-4"/>Ide Konten
+                    </Button>
+                    <Button type="button" variant={outputFormat === 'qa' ? 'default' : 'outline'} onClick={() => setOutputFormat('qa')}>
+                        <HelpCircle className="mr-2 h-4 w-4"/>Tanya Jawab
+                    </Button>
                 </div>
             </div>
+
+            {outputFormat === 'qa' && (
+                <div className="space-y-2 animate-in fade-in duration-300">
+                    <Label htmlFor="qa-input" className="text-base font-semibold">Ajukan Pertanyaan Anda</Label>
+                    <Input id="qa-input" placeholder="Ketik pertanyaan Anda tentang teks di sini..." value={question} onChange={(e) => setQuestion(e.target.value)} />
+                </div>
+            )}
 
             <div className="flex justify-end">
               <Button type="submit" disabled={isPending} size="lg" className="shadow-lg hover:shadow-xl transition-shadow">
