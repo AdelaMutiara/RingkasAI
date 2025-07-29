@@ -131,7 +131,7 @@ Instruksi Anda: ${instruction}
       output: {
         schema: z.object({
           output: z.string().describe("Hasil utama berdasarkan format yang diminta (ringkasan, poin penting, dll)."),
-          answer: z.string().optional().describe("Jawaban atas pertanyaan spesifik pengguna. Hanya ada jika pengguna bertanya."),
+          answer: z.string().nullable().optional().describe("Jawaban atas pertanyaan spesifik pengguna. Hanya ada jika pengguna bertanya."),
         })
       }
     });
