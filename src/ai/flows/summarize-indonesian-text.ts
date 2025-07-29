@@ -11,18 +11,19 @@ import {ai} from '@/ai/genkit';
 import {z} from 'genkit';
 import {JSDOM} from 'jsdom';
 
-const OutputFormatSchema = z.enum(['summary', 'keyPoints', 'questions', 'contentIdeas', 'qa']);
+const OutputFormatSchema = z.enum(['summary', 'keyPoints', 'questions', 'contentIdeas']);
 
 const SummarizeIndonesianTextInputSchema = z.object({
   text: z.string().optional().describe('The Indonesian text to summarize.'),
   url: z.string().optional().describe('The URL of the Indonesian text to summarize.'),
-  question: z.string().optional().describe('User\'s question for the Q&A feature.'),
+  question: z.string().optional().describe('User\'s question about the source text.'),
   outputFormat: OutputFormatSchema.default('summary'),
 });
 export type SummarizeIndonesianTextInput = z.infer<typeof SummarizeIndonesianTextInputSchema>;
 
 const SummarizeIndonesianTextOutputSchema = z.object({
   output: z.string().describe('The processed output based on the selected format.'),
+  answer: z.string().optional().describe('The answer to the user\'s question.'),
   wordCountOriginal: z.number().describe('The word count of the original text.'),
   wordCountSummary: z.number().describe('The word count of the summarized text.'),
   outputFormat: OutputFormatSchema.default('summary'),
@@ -102,18 +103,17 @@ const summarizeIndonesianTextFlow = ai.defineFlow(
       case 'contentIdeas':
         instruction = 'Berdasarkan teks yang diberikan, hasilkan 5 ide konten yang menarik dalam format daftar bernomor. Setiap ide harus kreatif dan relevan dengan topik utama teks.';
         break;
-      case 'qa':
-        if (!input.question) {
-            throw new Error('Pertanyaan diperlukan untuk format Tanya Jawab.');
-        }
-        instruction = `Jawab pertanyaan berikut: "${input.question}" HANYA berdasarkan informasi yang ada di dalam teks yang diberikan. Jika jawaban tidak dapat ditemukan di dalam teks, katakan "Informasi untuk menjawab pertanyaan tersebut tidak ditemukan dalam teks."`;
-        break;
+    }
+
+    if (input.question) {
+        instruction += `\n\nSelain itu, jawab pertanyaan berikut: "${input.question}" HANYA berdasarkan informasi yang ada di dalam teks yang diberikan. Jika jawaban tidak dapat ditemukan di dalam teks, katakan "Informasi untuk menjawab pertanyaan tersebut tidak ditemukan dalam teks." Letakkan jawaban untuk pertanyaan ini di bidang 'jawaban' pada output JSON.`;
     }
     
     const textToProcess = input.text || '';
     const urlToProcess = input.url || '';
-
-    const prompt = `Anda adalah asisten AI yang ahli dalam memproses teks berbahasa Indonesia. Tugas Anda adalah memproses teks atau URL yang diberikan sesuai dengan instruksi yang spesifik.
+    
+    const llmResponse = await ai.generate({
+      prompt: `Anda adalah asisten AI yang ahli dalam memproses teks berbahasa Indonesia. Tugas Anda adalah memproses teks atau URL yang diberikan sesuai dengan instruksi yang spesifik.
 PENTING: Seluruh output Anda HARUS dalam Bahasa Indonesia. Jangan pernah menggunakan Bahasa Inggris.
 
 Jika URL yang diberikan, gunakan alat 'fetchTextFromUrl' untuk mengambil kontennya terlebih dahulu.
@@ -125,16 +125,25 @@ Teks Asli: ${textToProcess}
 URL: ${urlToProcess}
 
 Instruksi Anda: ${instruction}
-Output:`;
-
-    const llmResponse = await ai.generate({
-      prompt: prompt,
+`,
       tools: [fetchTextFromUrl, copyeditTool],
-      toolChoice: 'auto'
+      toolChoice: 'auto',
+      output: {
+        schema: z.object({
+          output: z.string().describe("Hasil utama berdasarkan format yang diminta (ringkasan, poin penting, dll)."),
+          answer: z.string().optional().describe("Jawaban atas pertanyaan spesifik pengguna. Hanya ada jika pengguna bertanya."),
+        })
+      }
     });
 
-    const outputText = llmResponse.text;
-    
+    const outputData = llmResponse.output();
+    if (!outputData) {
+        throw new Error('Gagal menghasilkan output dari AI.');
+    }
+
+    const outputText = outputData.output || '';
+    const answerText = outputData.answer;
+
     let originalTextForCount = textToProcess;
     if (llmResponse.history) {
         const toolOutputs = llmResponse.history
@@ -163,6 +172,7 @@ Output:`;
 
     return {
       output: outputText,
+      answer: answerText,
       wordCountOriginal,
       wordCountSummary,
       outputFormat: input.outputFormat

@@ -4,20 +4,21 @@ import { useState, useTransition, useCallback } from "react";
 import { summarizeIndonesianText, SummarizeIndonesianTextOutput } from "@/ai/flows/summarize-indonesian-text";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Loader2, Copy, Check, Upload, Link as LinkIcon, FileText, Sparkles, HelpCircle, Lightbulb } from "lucide-react";
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
+import { Loader2, Copy, Check, Upload, Link as LinkIcon, FileText, Sparkles, MessageSquareQuestion } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
 import * as pdfjs from "pdfjs-dist";
 
 // Required for pdfjs-dist
 pdfjs.GlobalWorkerOptions.workerSrc = `//unpkg.com/pdfjs-dist@${pdfjs.version}/build/pdf.worker.min.mjs`;
 
 type InputSource = "text" | "pdf" | "url";
-type OutputFormat = "summary" | "keyPoints" | "questions" | "contentIdeas" | "qa";
+type OutputFormat = "summary" | "keyPoints" | "questions" | "contentIdeas";
 
 export function SummarizerPage() {
   const [inputText, setInputText] = useState("");
@@ -28,6 +29,7 @@ export function SummarizerPage() {
   const [isPending, startTransition] = useTransition();
   const { toast } = useToast();
   const [isCopied, setIsCopied] = useState(false);
+  const [isAnswerCopied, setIsAnswerCopied] = useState(false);
   const [inputSource, setInputSource] = useState<InputSource>("text");
   const [outputFormat, setOutputFormat] = useState<OutputFormat>("summary");
 
@@ -89,17 +91,8 @@ export function SummarizerPage() {
       });
       return;
     }
-
-    if (outputFormat === 'qa' && !question.trim()) {
-        toast({
-            title: "Pertanyaan Diperlukan",
-            description: "Silakan masukkan pertanyaan untuk fitur Tanya Jawab.",
-            variant: "destructive",
-        });
-        return;
-    }
-
-    if (outputFormat === 'qa') {
+    
+    if (question.trim()) {
         payload.question = question;
     }
 
@@ -121,18 +114,21 @@ export function SummarizerPage() {
     });
   };
 
-  const handleCopy = useCallback(() => {
-    if (result?.output) {
-      navigator.clipboard.writeText(result.output).then(() => {
-        setIsCopied(true);
+  const handleCopy = useCallback((textToCopy: string, type: 'output' | 'answer') => {
+    navigator.clipboard.writeText(textToCopy).then(() => {
+        if (type === 'output') {
+            setIsCopied(true);
+            setTimeout(() => setIsCopied(false), 2000);
+        } else {
+            setIsAnswerCopied(true);
+            setTimeout(() => setIsAnswerCopied(false), 2000);
+        }
         toast({
-          title: "Copied!",
-          description: "Output copied to clipboard.",
+            title: "Tersalin!",
+            description: "Teks berhasil disalin ke clipboard.",
         });
-        setTimeout(() => setIsCopied(false), 2000);
-      });
-    }
-  }, [result, toast]);
+    });
+  }, [toast]);
 
   const reductionPercentage = result && result.wordCountOriginal > 0 
     ? Math.round(100 - (result.wordCountSummary / result.wordCountOriginal * 100))
@@ -145,7 +141,6 @@ export function SummarizerPage() {
       case "questions": return "Pertanyaan yang Dihasilkan";
       case "summary": return "Ringkasan";
       case "contentIdeas": return "Ide Konten";
-      case "qa": return "Jawaban";
       default:
         return "Hasil";
     }
@@ -218,18 +213,27 @@ export function SummarizerPage() {
                     <Button type="button" variant={outputFormat === 'contentIdeas' ? 'default' : 'outline'} onClick={() => setOutputFormat('contentIdeas')}>
                         💡 Ide Konten
                     </Button>
-                    <Button type="button" variant={outputFormat === 'qa' ? 'default' : 'outline'} onClick={() => setOutputFormat('qa')}>
-                        💬 Tanya Jawab
-                    </Button>
                 </div>
             </div>
 
-            {outputFormat === 'qa' && (
-                <div className="space-y-2 animate-in fade-in duration-300">
-                    <Label htmlFor="qa-input" className="text-base font-semibold">Ajukan Pertanyaan Anda</Label>
-                    <Input id="qa-input" placeholder="Ketik pertanyaan Anda tentang teks di sini..." value={question} onChange={(e) => setQuestion(e.target.value)} />
-                </div>
-            )}
+            <Accordion type="single" collapsible className="w-full">
+              <AccordionItem value="item-1">
+                <AccordionTrigger>
+                    <div className="flex items-center gap-2">
+                        <MessageSquareQuestion className="h-4 w-4 text-primary"/>
+                        <span>Punya pertanyaan spesifik? (Opsional)</span>
+                    </div>
+                </AccordionTrigger>
+                <AccordionContent>
+                    <div className="space-y-2 pt-2">
+                        <Label htmlFor="qa-input">Ajukan Pertanyaan Anda</Label>
+                        <Input id="qa-input" placeholder="Ketik pertanyaan Anda tentang teks sumber di sini..." value={question} onChange={(e) => setQuestion(e.target.value)} />
+                        <p className="text-xs text-muted-foreground">AI akan menjawab pertanyaan Anda berdasarkan sumber yang diberikan, bersamaan dengan output format yang Anda pilih.</p>
+                    </div>
+                </AccordionContent>
+              </AccordionItem>
+            </Accordion>
+
 
             <div className="flex justify-end">
               <Button type="submit" disabled={isPending} size="lg" className="shadow-lg hover:shadow-xl transition-shadow">
@@ -267,28 +271,49 @@ export function SummarizerPage() {
       )}
 
       {result && (
-        <Card className="mt-8 animate-in fade-in duration-500">
-          <CardHeader>
-            <div className="flex justify-between items-start">
-              <div>
-                <CardTitle className="font-headline">{getOutputTitle()}</CardTitle>
-                 {result.outputFormat === "summary" && (
-                    <div className="text-sm text-muted-foreground mt-2 flex flex-wrap gap-x-4 gap-y-1">
-                        <span>Asli: <span className="font-medium text-foreground">{result.wordCountOriginal} kata</span></span>
-                        <span>Output: <span className="font-medium text-foreground">{result.wordCountSummary} kata</span></span>
-                        <span>Reduksi: <span className="font-medium text-foreground">{reductionPercentage}%</span></span>
-                    </div>
-                 )}
-              </div>
-              <Button variant="ghost" size="icon" onClick={handleCopy} aria-label="Copy summary">
-                {isCopied ? <Check className="h-5 w-5 text-green-500" /> : <Copy className="h-5 w-5 text-accent-foreground/80" />}
-              </Button>
-            </div>
-          </CardHeader>
-          <CardContent>
-             <div className="text-base leading-relaxed whitespace-pre-wrap">{result.output}</div>
-          </CardContent>
-        </Card>
+        <div className="space-y-8 mt-8">
+            {result.answer && (
+                <Card className="animate-in fade-in duration-500">
+                    <CardHeader>
+                        <div className="flex justify-between items-start">
+                          <div>
+                            <CardTitle className="font-headline">Jawaban untuk Pertanyaan Anda</CardTitle>
+                            <CardDescription className="mt-1">Berdasarkan sumber yang Anda berikan.</CardDescription>
+                          </div>
+                          <Button variant="ghost" size="icon" onClick={() => handleCopy(result.answer!, 'answer')} aria-label="Copy answer">
+                            {isAnswerCopied ? <Check className="h-5 w-5 text-green-500" /> : <Copy className="h-5 w-5 text-accent-foreground/80" />}
+                          </Button>
+                        </div>
+                    </CardHeader>
+                    <CardContent>
+                        <div className="text-base leading-relaxed whitespace-pre-wrap">{result.answer}</div>
+                    </CardContent>
+                </Card>
+            )}
+
+            <Card className="animate-in fade-in duration-500">
+              <CardHeader>
+                <div className="flex justify-between items-start">
+                  <div>
+                    <CardTitle className="font-headline">{getOutputTitle()}</CardTitle>
+                     {result.outputFormat === "summary" && (
+                        <div className="text-sm text-muted-foreground mt-2 flex flex-wrap gap-x-4 gap-y-1">
+                            <span>Asli: <span className="font-medium text-foreground">{result.wordCountOriginal} kata</span></span>
+                            <span>Output: <span className="font-medium text-foreground">{result.wordCountSummary} kata</span></span>
+                            <span>Reduksi: <span className="font-medium text-foreground">{reductionPercentage}%</span></span>
+                        </div>
+                     )}
+                  </div>
+                  <Button variant="ghost" size="icon" onClick={() => handleCopy(result.output, 'output')} aria-label="Copy output">
+                    {isCopied ? <Check className="h-5 w-5 text-green-500" /> : <Copy className="h-5 w-5 text-accent-foreground/80" />}
+                  </Button>
+                </div>
+              </CardHeader>
+              <CardContent>
+                 <div className="text-base leading-relaxed whitespace-pre-wrap">{result.output}</div>
+              </CardContent>
+            </Card>
+        </div>
       )}
     </div>
   );
