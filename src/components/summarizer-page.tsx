@@ -207,19 +207,19 @@ export function SummarizerPage() {
               <Label className="text-base font-semibold">Format Output</Label>
                <div className="flex flex-wrap items-center gap-2 mt-2">
                     <Button type="button" variant={outputFormat === 'summary' ? 'default' : 'outline'} onClick={() => setOutputFormat('summary')}>
-                        Ringkasan
+                        📄 Ringkasan
                     </Button>
                     <Button type="button" variant={outputFormat === 'keyPoints' ? 'default' : 'outline'} onClick={() => setOutputFormat('keyPoints')}>
-                        Poin Penting
+                        🎯 Poin Penting
                     </Button>
                     <Button type="button" variant={outputFormat === 'questions' ? 'default' : 'outline'} onClick={() => setOutputFormat('questions')}>
-                        Pertanyaan
+                        ❓ Pertanyaan
                     </Button>
                     <Button type="button" variant={outputFormat === 'contentIdeas' ? 'default' : 'outline'} onClick={() => setOutputFormat('contentIdeas')}>
-                        <Lightbulb className="mr-2 h-4 w-4"/>Ide Konten
+                        💡 Ide Konten
                     </Button>
                     <Button type="button" variant={outputFormat === 'qa' ? 'default' : 'outline'} onClick={() => setOutputFormat('qa')}>
-                        <HelpCircle className="mr-2 h-4 w-4"/>Tanya Jawab
+                        💬 Tanya Jawab
                     </Button>
                 </div>
             </div>
