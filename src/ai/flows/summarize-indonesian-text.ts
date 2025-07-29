@@ -136,7 +136,7 @@ Instruksi Anda: ${instruction}
       }
     });
 
-    const outputData = llmResponse.output();
+    const outputData = llmResponse.output;
     if (!outputData) {
         throw new Error('Gagal menghasilkan output dari AI.');
     }
