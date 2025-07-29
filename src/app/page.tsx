@@ -1,4 +1,7 @@
 
+"use client"
+import React from 'react';
+
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { ThemeToggle } from '@/components/theme-toggle';
@@ -7,8 +10,23 @@ import { CheckCircle, Zap, FileText, Upload, Link as LinkIcon, Bot, Star, GanttC
 import Link from 'next/link';
 import Image from 'next/image';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+import { Carousel, CarouselContent, CarouselItem, CarouselNext, CarouselPrevious } from '@/components/ui/carousel';
+import Autoplay from "embla-carousel-autoplay"
 
 export default function LandingPage() {
+    const testimonials = [
+        { name: "Andi Pratama", title: "Mahasiswa", text: "\"RingkasAI mengubah cara saya belajar. Meringkas jurnal penelitian yang tadinya butuh berjam-jam, sekarang selesai dalam beberapa menit. Fitur poin penting sangat membantu!\"" },
+        { name: "Siti Rahayu", title: "Content Writer", text: "\"Sebagai penulis, saya harus riset banyak artikel setiap hari. Dengan fitur ringkasan dari URL, pekerjaan saya jadi 10x lebih cepat. Sangat direkomendasikan!\"" },
+        { name: "Budi Wijaya", title: "Product Manager", text: "\"Saya menggunakan RingkasAI untuk mendapatkan ringkasan dari transkrip video rapat dan interview pengguna. Sangat menghemat waktu dan membantu tim kami fokus pada hal yang penting.\"" },
+        { name: "Rina Sari", title: "Peneliti Akademis", text: "\"Alat ini adalah penyelamat. Saya bisa dengan cepat meninjau puluhan artikel dan paper untuk studi literatur saya. Fitur pembuatan pertanyaan juga brilian untuk menguji pemahaman.\"" },
+        { name: "Joko Susilo", title: "Digital Marketer", text: "\"Menganalisis konten kompetitor jadi lebih mudah. Saya cukup masukkan URL blog mereka dan langsung dapat poin-poin utamanya. Strategi konten kami jadi lebih tajam berkat ini.\"" },
+        { name: "Dewi Lestari", title: "Guru SMA", text: "\"Saya sering menggunakan RingkasAI untuk membuat materi ajar dari berbagai sumber online. Para siswa juga saya anjurkan pakai ini agar mereka bisa belajar lebih efisien.\"" },
+        { name: "Agung Nugroho", title: "Pengacara", text: "\"Dalam profesi saya, waktu sangat berharga. Meringkas dokumen hukum yang panjang dan rumit menjadi jauh lebih cepat. Ini benar-benar meningkatkan produktivitas saya.\"" },
+        { name: "Fitriani", title: "Penerjemah", text: "\"Sebelum menerjemahkan, saya meringkas dulu teksnya untuk memahami inti sari. Ini membantu saya menjaga konsistensi makna. Alat yang luar biasa.\"" },
+        { name: "Heru Wibowo", title: "Analis Bisnis", text: "\"Laporan pasar yang tebal dan penuh data bisa saya dapatkan poin kuncinya dalam sekejap. Membantu saya membuat keputusan bisnis dengan lebih cepat dan berbasis data.\"" },
+        { name: "Linda Hartono", title: "Freelancer", text: "\"Sebagai freelancer, saya mengerjakan banyak proyek berbeda. RingkasAI membantu saya cepat 'nyambung' dengan topik baru dengan meringkas materi dari klien. Wajib punya!\"" }
+    ];
+
   return (
     <div className="flex flex-col min-h-screen bg-secondary/50">
       <header className="sticky top-0 z-50 w-full border-b border-border/40 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
@@ -131,41 +149,38 @@ export default function LandingPage() {
                 <div className="text-center mb-12">
                     <h2 className="text-3xl md:text-4xl font-bold font-headline">Apa Kata Mereka?</h2>
                 </div>
-                <div className="grid lg:grid-cols-3 gap-8">
-                    <Card>
-                        <CardContent className="pt-6">
-                            <div className="flex items-center mb-4">
-                               <div>
-                                   <p className="font-bold">Andi Pratama</p>
-                                   <p className="text-sm text-muted-foreground">Mahasiswa</p>
-                               </div>
-                            </div>
-                            <p className="text-muted-foreground">"RingkasAI mengubah cara saya belajar. Meringkas jurnal penelitian yang tadinya butuh berjam-jam, sekarang selesai dalam beberapa menit. Fitur poin penting sangat membantu!"</p>
-                        </CardContent>
-                    </Card>
-                    <Card>
-                        <CardContent className="pt-6">
-                             <div className="flex items-center mb-4">
-                               <div>
-                                   <p className="font-bold">Siti Rahayu</p>
-                                   <p className="text-sm text-muted-foreground">Content Writer</p>
-                               </div>
-                            </div>
-                            <p className="text-muted-foreground">"Sebagai penulis, saya harus riset banyak artikel setiap hari. Dengan fitur ringkasan dari URL, pekerjaan saya jadi 10x lebih cepat. Sangat direkomendasikan!"</p>
-                        </CardContent>
-                    </Card>
-                    <Card>
-                        <CardContent className="pt-6">
-                            <div className="flex items-center mb-4">
-                               <div>
-                                   <p className="font-bold">Budi Wijaya</p>
-                                   <p className="text-sm text-muted-foreground">Product Manager</p>
-                               </div>
-                            </div>
-                            <p className="text-muted-foreground">"Saya menggunakan RingkasAI untuk mendapatkan ringkasan dari transkrip video rapat dan interview pengguna. Sangat menghemat waktu dan membantu tim kami fokus pada hal yang penting."</p>
-                        </CardContent>
-                    </Card>
-                </div>
+                 <Carousel
+                    plugins={[
+                        Autoplay({
+                          delay: 4000,
+                        }),
+                    ]}
+                    opts={{
+                        align: "start",
+                        loop: true,
+                    }}
+                    className="w-full"
+                >
+                    <CarouselContent>
+                        {testimonials.map((testimonial, index) => (
+                            <CarouselItem key={index} className="md:basis-1/2 lg:basis-1/3">
+                                <div className="p-1 h-full">
+                                    <Card className="h-full">
+                                        <CardContent className="pt-6 h-full flex flex-col justify-between">
+                                            <p className="text-muted-foreground mb-4 flex-grow">{testimonial.text}</p>
+                                            <div>
+                                                <p className="font-bold">{testimonial.name}</p>
+                                                <p className="text-sm text-muted-foreground">{testimonial.title}</p>
+                                            </div>
+                                        </CardContent>
+                                    </Card>
+                                </div>
+                            </CarouselItem>
+                        ))}
+                    </CarouselContent>
+                    <CarouselPrevious />
+                    <CarouselNext />
+                </Carousel>
             </div>
         </section>
 
