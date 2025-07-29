@@ -30,7 +30,7 @@ export default function LandingPage() {
         <section className="py-20 md:py-32">
           <div className="container text-center">
             <h1 className="text-4xl md:text-6xl font-bold font-headline tracking-tight">
-              Ubah Teks Apapun Menjadi Intisari Cerdas, dalam Hitungan Detik.
+              Ubah Teks Apapun Menjadi Ringkasan Cerdas, dalam Hitungan Detik.
             </h1>
             <p className="mt-4 max-w-3xl mx-auto text-lg text-muted-foreground">
               Platform untuk pelajar, peneliti, dan profesional yang ingin memahami informasi lebih cepat. RingkasAI mengubah artikel panjang, PDF, bahkan video YouTube menjadi ringkasan padat.
@@ -201,7 +201,7 @@ export default function LandingPage() {
                                    <p className="text-sm text-muted-foreground">Product Manager</p>
                                </div>
                             </div>
-                            <p className="text-muted-foreground">"Saya menggunakan RingkasAI untuk mendapatkan intisari dari transkrip video rapat dan interview pengguna. Sangat menghemat waktu dan membantu tim kami fokus pada hal yang penting."</p>
+                            <p className="text-muted-foreground">"Saya menggunakan RingkasAI untuk mendapatkan ringkasan dari transkrip video rapat dan interview pengguna. Sangat menghemat waktu dan membantu tim kami fokus pada hal yang penting."</p>
                         </CardContent>
                     </Card>
                 </div>
@@ -210,7 +210,7 @@ export default function LandingPage() {
 
 
         {/* 8. FAQ Section */}
-        <section className="py-16 bg-background">
+        <section id="faq" className="py-16 bg-background">
           <div className="container max-w-3xl mx-auto">
              <div className="text-center mb-12">
               <h2 className="text-3xl md:text-4xl font-bold font-headline">Pertanyaan Umum</h2>
@@ -285,3 +285,5 @@ export default function LandingPage() {
     </div>
   );
 }
+
+    
