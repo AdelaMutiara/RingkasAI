@@ -93,7 +93,7 @@ const summarizeIndonesianTextFlow = ai.defineFlow(
     let instruction = '';
     
     if (input.question) {
-        instruction = `Jawab pertanyaan berikut: "${input.question}" HANYA berdasarkan informasi yang ada di dalam teks yang diberikan. Jika jawaban tidak dapat ditemukan di dalam teks, katakan "Informasi untuk menjawab pertanyaan tersebut tidak ditemukan dalam teks." Letakkan jawaban untuk pertanyaan ini di bidang 'jawaban' pada output JSON. Jangan hasilkan output lain, hanya jawaban.`;
+        instruction = `Jawab pertanyaan berikut: "${input.question}" HANYA berdasarkan informasi yang ada di dalam teks yang diberikan. Jika jawaban tidak dapat ditemukan di dalam teks, katakan "Informasi untuk menjawab pertanyaan tersebut tidak ditemukan dalam teks." Letakkan jawaban untuk pertanyaan ini di bidang 'answer' pada output JSON. Jangan hasilkan output lain, hanya jawaban.`;
     } else {
         switch (input.outputFormat) {
           case 'summary':
@@ -162,11 +162,6 @@ Instruksi Anda: ${instruction}
             })
             .join(' ');
         }
-    }
-
-
-    if (!originalTextForCount && urlToProcess && !outputText && !answerText) {
-       throw new Error('No text to process. Please provide text or a valid URL.');
     }
 
     const wordCountOriginal = originalTextForCount.split(/\s+/).filter(Boolean).length;
