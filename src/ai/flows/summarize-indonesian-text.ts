@@ -1,3 +1,4 @@
+
 'use server';
 /**
  * @fileOverview An AI agent to summarize Indonesian text from various sources.
@@ -23,7 +24,7 @@ export type SummarizeIndonesianTextInput = z.infer<typeof SummarizeIndonesianTex
 
 const SummarizeIndonesianTextOutputSchema = z.object({
   output: z.string().describe('The processed output based on the selected format.'),
-  answer: z.string().optional().describe('The answer to the user\'s question.'),
+  answer: z.string().nullable().optional().describe('The answer to the user\'s question.'),
   wordCountOriginal: z.number().describe('The word count of the original text.'),
   wordCountSummary: z.number().describe('The word count of the summarized text.'),
   outputFormat: OutputFormatSchema.default('summary'),
@@ -101,7 +102,7 @@ const summarizeIndonesianTextFlow = ai.defineFlow(
         instruction = 'Buat daftar pertanyaan penting berdasarkan teks sebagai daftar bernomor.';
         break;
       case 'contentIdeas':
-        instruction = 'Berdasarkan teks yang diberikan, hasilkan 5 ide konten yang menarik dalam format daftar bernomor. Setiap ide harus kreatif dan relevan dengan topik utama teks.';
+        instruction = 'Berdasarkan teks yang diberikan, hasilkan 5 ide konten yang menarik dalam format daftar bernomor. Setiap ide harus kreatif dan relevan dengan topik utama teks. Jangan gunakan tanda bintang (*) atau format markdown lainnya.';
         break;
     }
 
@@ -116,7 +117,7 @@ const summarizeIndonesianTextFlow = ai.defineFlow(
       prompt: `Anda adalah asisten AI yang ahli dalam memproses teks berbahasa Indonesia. Tugas Anda adalah memproses teks atau URL yang diberikan sesuai dengan instruksi yang spesifik.
 PENTING: Seluruh output Anda HARUS dalam Bahasa Indonesia. Jangan pernah menggunakan Bahasa Inggris.
 
-Jika URL yang diberikan, gunakan alat 'fetchTextFromUrl' untuk mengambil kontennya terlebih dahulu.
+Jika URL yang diberikan, gunakan alat 'fetchTextFromUrl' untuk mengambil kontennya terlebih dahulu. Setelah mendapatkan teks, atau jika teks sudah disediakan, prioritaskan untuk menerapkan instruksi pemrosesan di bawah ini.
 Setelah mendapatkan teks dari URL, atau jika teks sudah disediakan dari awal, Anda HARUS menerapkan instruksi pemrosesan di bawah ini pada teks tersebut.
 Jika sebuah alat mengembalikan pesan error (misalnya "Gagal mengambil..."), sampaikan pesan error tersebut kepada pengguna DALAM BAHASA INDONESIA sebagai jawaban akhir Anda. Jangan mencoba memprosesnya lebih lanjut.
 Jika teks dan URL diberikan, prioritaskan teks yang diberikan.
