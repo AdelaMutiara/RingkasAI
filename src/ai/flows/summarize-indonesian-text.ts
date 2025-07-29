@@ -51,7 +51,7 @@ const copyeditTool = ai.defineTool(
 const fetchTextFromUrl = ai.defineTool(
   {
     name: 'fetchTextFromUrl',
-    description: 'Fetches the text content from a given website URL.',
+    description: 'Fetches the text content from a given website URL. Do not use for YouTube URLs.',
     inputSchema: z.object({
       url: z.string().describe('The URL to fetch content from.'),
     }),
@@ -67,10 +67,14 @@ const fetchTextFromUrl = ai.defineTool(
       const dom = new JSDOM(html);
       // Remove script and style elements
       dom.window.document.querySelectorAll('script, style').forEach((el) => el.remove());
-      return { output: dom.window.document.body.textContent || '' };
+      const rawText = dom.window.document.body.textContent || '';
+      if (!rawText.trim()){
+        return { output: 'Gagal mengambil konten dari URL karena isinya kosong.' };
+      }
+      return { output: rawText };
     } catch (error) {
       console.error('Error fetching URL:', error);
-      return { output: 'Gagal mengambil konten dari URL.' };
+      return { output: 'Gagal mengambil konten dari URL. Pastikan URL valid dan dapat diakses.' };
     }
   }
 );
@@ -89,7 +93,7 @@ const summarizeIndonesianTextFlow = ai.defineFlow(
         instruction = 'Buat ringkasan singkat dari teks, tidak lebih dari 30% dari panjang aslinya, sambil mempertahankan informasi utama.';
         break;
       case 'keyPoints':
-        instruction = 'Ekstrak poin-poin penting dari teks sebagai daftar berpoin. Gunakan karakter bullet point (•) untuk setiap poin, bukan tanda hubung (-).';
+        instruction = 'Ekstrak poin-poin penting dari teks sebagai daftar berpoin. PENTING: Gunakan HANYA karakter bullet point (•) untuk setiap poin. JANGAN gunakan tanda bintang (*) atau tanda hubung (-).';
         break;
       case 'questions':
         instruction = 'Buat daftar pertanyaan penting berdasarkan teks sebagai daftar bernomor.';
@@ -99,10 +103,11 @@ const summarizeIndonesianTextFlow = ai.defineFlow(
     const textToProcess = input.text || '';
     const urlToProcess = input.url || '';
 
-    const prompt = `Anda adalah asisten AI yang ahli dalam memproses teks berbahasa Indonesia. Tugas Anda adalah memproses teks atau URL yang diberikan sesuai dengan instruksi.
+    const prompt = `Anda adalah asisten AI yang ahli dalam memproses teks berbahasa Indonesia. Tugas Anda adalah memproses teks atau URL yang diberikan sesuai dengan instruksi yang spesifik.
 PENTING: Seluruh output Anda HARUS dalam Bahasa Indonesia. Jangan pernah menggunakan Bahasa Inggris.
 
-Jika URL yang diberikan, gunakan alat yang tersedia untuk mengambil kontennya.
+Jika URL yang diberikan, gunakan alat 'fetchTextFromUrl' untuk mengambil kontennya terlebih dahulu.
+Setelah mendapatkan teks dari URL, atau jika teks sudah disediakan dari awal, Anda HARUS menerapkan instruksi pemrosesan di bawah ini pada teks tersebut.
 Jika sebuah alat mengembalikan pesan error (misalnya "Gagal mengambil..."), sampaikan pesan error tersebut kepada pengguna DALAM BAHASA INDONESIA sebagai jawaban akhir Anda. Jangan mencoba memprosesnya lebih lanjut.
 Jika teks dan URL diberikan, prioritaskan teks yang diberikan.
 
@@ -120,13 +125,10 @@ Output:`;
 
     const outputText = llmResponse.text;
     
-    // We need to get the original text for word count.
-    // If a tool was used, its output is the original text.
-    // If not, the original input text was used.
     let originalTextForCount = textToProcess;
     if (llmResponse.history) {
         const toolOutputs = llmResponse.history
-          .filter(m => m.role === 'tool');
+          .filter(m => m.role === 'tool' && m.content[0]?.toolResponse?.name === 'fetchTextFromUrl');
     
         if (toolOutputs.length > 0) {
           originalTextForCount = toolOutputs
