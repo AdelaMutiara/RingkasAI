@@ -40,35 +40,8 @@ export default function LandingPage() {
                 <Link href="/summarizer">Coba Ringkas Gratis</Link>
               </Button>
             </div>
-             <div className="mt-12">
-                 <Image 
-                    src="https://placehold.co/1200x600.png" 
-                    alt="Dashboard RingkasAI" 
-                    width={1200} 
-                    height={600} 
-                    className="rounded-lg shadow-2xl mx-auto"
-                    data-ai-hint="app dashboard"
-                  />
-            </div>
           </div>
         </section>
-
-        {/* 2. Social Proof & Trust Bar */}
-        <section className="py-8 bg-background">
-          <div className="container text-center">
-             <p className="text-sm font-semibold text-muted-foreground tracking-wider uppercase">
-               DIPERCAYA OLEH TIM DAN INDIVIDU DI SELURUH INDONESIA
-            </p>
-            <div className="mt-6 grid grid-cols-2 md:grid-cols-4 lg:grid-cols-5 gap-8 items-center opacity-70">
-                <Users className="h-8 w-full" />
-                <Users className="h-8 w-full" />
-                <Users className="h-8 w-full" />
-                <Users className="h-8 w-full" />
-                <Users className="h-8 w-full hidden lg:block" />
-            </div>
-          </div>
-        </section>
-
 
         {/* 4. How It Works */}
         <section id="how-it-works" className="py-20">
