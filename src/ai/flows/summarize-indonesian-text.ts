@@ -132,7 +132,7 @@ Instruksi Anda: ${instruction}
       toolChoice: 'auto',
       output: {
         schema: z.object({
-          output: z.string().optional().describe("Hasil utama berdasarkan format yang diminta (ringkasan, poin penting, dll). Hanya ada jika tidak ada pertanyaan."),
+          output: z.string().nullable().optional().describe("Hasil utama berdasarkan format yang diminta (ringkasan, poin penting, dll). Hanya ada jika tidak ada pertanyaan."),
           answer: z.string().nullable().optional().describe("Jawaban atas pertanyaan spesifik pengguna. Hanya ada jika pengguna bertanya."),
         })
       }
