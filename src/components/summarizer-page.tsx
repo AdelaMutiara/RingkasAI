@@ -5,7 +5,7 @@ import { summarizeIndonesianText, SummarizeIndonesianTextOutput } from "@/ai/flo
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
-import { Loader2, Copy, Check, Upload, Link as LinkIcon, FileText, Sparkles, MessageSquareQuestion } from "lucide-react";
+import { Loader2, Copy, Check, Upload, Link as LinkIcon, FileText, Sparkles, HelpCircle } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -153,7 +153,7 @@ export function SummarizerPage() {
           Asisten Pintar Untuk Ringkasan Teks Apapun
         </h1>
         <p className="text-muted-foreground mt-2">
-          Dapatkan Intisari, Poin Penting, atau Pertanyaan Kunci dari Teks Berbahasa Indonesia dalam Sekejap.
+          Dapatkan Ringkasan, Poin Penting, atau Pertanyaan Kunci dari Teks Berbahasa Indonesia dalam Sekejap.
         </p>
       </div>
 
@@ -220,7 +220,7 @@ export function SummarizerPage() {
               <AccordionItem value="item-1">
                 <AccordionTrigger>
                     <div className="flex items-center gap-2">
-                        <MessageSquareQuestion className="h-4 w-4 text-primary"/>
+                        <HelpCircle className="h-4 w-4 text-primary"/>
                         <span>Punya pertanyaan spesifik? (Opsional)</span>
                     </div>
                 </AccordionTrigger>
