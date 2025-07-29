@@ -91,23 +91,24 @@ const summarizeIndonesianTextFlow = ai.defineFlow(
   async (input) => {
     
     let instruction = '';
-    switch (input.outputFormat) {
-      case 'summary':
-        instruction = 'Buat ringkasan singkat dari teks, tidak lebih dari 30% dari panjang aslinya, sambil mempertahankan informasi utama.';
-        break;
-      case 'keyPoints':
-        instruction = 'Ekstrak poin-poin penting dari teks sebagai daftar berpoin. PENTING: Gunakan HANYA karakter bullet point (•) untuk setiap poin. JANGAN gunakan tanda bintang (*) atau tanda hubung (-).';
-        break;
-      case 'questions':
-        instruction = 'Buat daftar pertanyaan penting berdasarkan teks sebagai daftar bernomor.';
-        break;
-      case 'contentIdeas':
-        instruction = 'Berdasarkan teks yang diberikan, hasilkan 5 ide konten yang menarik dalam format daftar bernomor. Setiap ide harus kreatif dan relevan dengan topik utama teks. Jangan gunakan tanda bintang (*) atau format markdown lainnya.';
-        break;
-    }
-
+    
     if (input.question) {
-        instruction += `\n\nSelain itu, jawab pertanyaan berikut: "${input.question}" HANYA berdasarkan informasi yang ada di dalam teks yang diberikan. Jika jawaban tidak dapat ditemukan di dalam teks, katakan "Informasi untuk menjawab pertanyaan tersebut tidak ditemukan dalam teks." Letakkan jawaban untuk pertanyaan ini di bidang 'jawaban' pada output JSON.`;
+        instruction = `Jawab pertanyaan berikut: "${input.question}" HANYA berdasarkan informasi yang ada di dalam teks yang diberikan. Jika jawaban tidak dapat ditemukan di dalam teks, katakan "Informasi untuk menjawab pertanyaan tersebut tidak ditemukan dalam teks." Letakkan jawaban untuk pertanyaan ini di bidang 'jawaban' pada output JSON.`;
+    } else {
+        switch (input.outputFormat) {
+          case 'summary':
+            instruction = 'Buat ringkasan singkat dari teks, tidak lebih dari 30% dari panjang aslinya, sambil mempertahankan informasi utama.';
+            break;
+          case 'keyPoints':
+            instruction = 'Ekstrak poin-poin penting dari teks sebagai daftar berpoin. PENTING: Gunakan HANYA karakter bullet point (•) untuk setiap poin. JANGAN gunakan tanda bintang (*) atau tanda hubung (-).';
+            break;
+          case 'questions':
+            instruction = 'Buat daftar pertanyaan penting berdasarkan teks sebagai daftar bernomor.';
+            break;
+          case 'contentIdeas':
+            instruction = 'Berdasarkan teks yang diberikan, hasilkan 5 ide konten yang menarik dalam format daftar bernomor. Setiap ide harus kreatif dan relevan dengan topik utama teks. Jangan gunakan tanda bintang (*) atau format markdown lainnya.';
+            break;
+        }
     }
     
     const textToProcess = input.text || '';
@@ -131,8 +132,8 @@ Instruksi Anda: ${instruction}
       toolChoice: 'auto',
       output: {
         schema: z.object({
-          output: z.string().describe("Hasil utama berdasarkan format yang diminta (ringkasan, poin penting, dll)."),
-          answer: z.string().nullable().optional().describe("Jawaban atas pertanyaan spesifik pengguna. Hanya ada jika pengguna bertanya."),
+          output: z.string().optional().describe("Hasil utama berdasarkan format yang diminta (ringkasan, poin penting, dll). Hanya ada jika tidak ada pertanyaan."),
+          answer: z.string().optional().describe("Jawaban atas pertanyaan spesifik pengguna. Hanya ada jika pengguna bertanya."),
         })
       }
     });
@@ -164,7 +165,7 @@ Instruksi Anda: ${instruction}
     }
 
 
-    if (!originalTextForCount && urlToProcess && !outputText) {
+    if (!originalTextForCount && urlToProcess && !outputText && !answerText) {
        throw new Error('No text to process. Please provide text or a valid URL.');
     }
 

@@ -11,7 +11,6 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
 import * as pdfjs from "pdfjs-dist";
 
 // Required for pdfjs-dist
@@ -20,6 +19,11 @@ pdfjs.GlobalWorkerOptions.workerSrc = `//unpkg.com/pdfjs-dist@${pdfjs.version}/b
 type InputSource = "text" | "pdf" | "url";
 type OutputFormat = "summary" | "keyPoints" | "questions" | "contentIdeas";
 
+interface StoredSource {
+    text?: string;
+    url?: string;
+}
+
 export function SummarizerPage() {
   const [inputText, setInputText] = useState("");
   const [url, setUrl] = useState("");
@@ -27,11 +31,14 @@ export function SummarizerPage() {
   const [question, setQuestion] = useState("");
   const [result, setResult] = useState<SummarizeIndonesianTextOutput | null>(null);
   const [isPending, startTransition] = useTransition();
+  const [isQAPending, startQATransition] = useTransition();
   const { toast } = useToast();
   const [isCopied, setIsCopied] = useState(false);
   const [isAnswerCopied, setIsAnswerCopied] = useState(false);
   const [inputSource, setInputSource] = useState<InputSource>("text");
   const [outputFormat, setOutputFormat] = useState<OutputFormat>("summary");
+  const [qaAnswer, setQaAnswer] = useState<string | null>(null);
+  const [storedSource, setStoredSource] = useState<StoredSource | null>(null);
 
   const handlePdfUpload = async (file: File) => {
     if (!file) return;
@@ -71,15 +78,19 @@ export function SummarizerPage() {
     e.preventDefault();
     let hasInput = false;
     let payload: { outputFormat: OutputFormat, text?: string, url?: string, question?: string } = { outputFormat };
+    let sourceToStore: StoredSource = {};
 
     if (inputSource === "text" && inputText.trim()) {
-      Object.assign(payload, { text: inputText });
+      payload.text = inputText;
+      sourceToStore.text = inputText;
       hasInput = true;
     } else if (inputSource === "pdf" && inputText.trim()) {
-      Object.assign(payload, { text: inputText });
+      payload.text = inputText;
+      sourceToStore.text = inputText;
       hasInput = true;
     } else if (inputSource === "url" && url.trim()) {
-      Object.assign(payload, { url: url });
+      payload.url = url;
+      sourceToStore.url = url;
       hasInput = true;
     }
 
@@ -92,12 +103,11 @@ export function SummarizerPage() {
       return;
     }
     
-    if (question.trim()) {
-        payload.question = question;
-    }
-
-
     setResult(null);
+    setQaAnswer(null);
+    setQuestion("");
+    setStoredSource(sourceToStore);
+
     startTransition(async () => {
       try {
         const summaryResult = await summarizeIndonesianText(payload);
@@ -113,6 +123,41 @@ export function SummarizerPage() {
       }
     });
   };
+
+  const handleQA = (e: React.FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
+    if (!question.trim() || !storedSource) {
+      toast({
+        title: "Pertanyaan diperlukan",
+        description: "Silakan masukkan pertanyaan Anda.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    const payload = {
+        ...storedSource,
+        question,
+        outputFormat: 'summary' // A default value, not really used for QA
+    };
+    
+    setQaAnswer(null);
+    startQATransition(async () => {
+      try {
+        const qaResult = await summarizeIndonesianText(payload);
+        setQaAnswer(qaResult.answer || "Tidak ada jawaban yang ditemukan.");
+      } catch (error) {
+         console.error("QA error:", error);
+        toast({
+          title: "Error",
+          description: `Gagal mendapatkan jawaban. ${error instanceof Error ? error.message : ''}`,
+          variant: "destructive",
+        });
+        setQaAnswer(null);
+      }
+    });
+
+  }
 
   const handleCopy = useCallback((textToCopy: string, type: 'output' | 'answer') => {
     navigator.clipboard.writeText(textToCopy).then(() => {
@@ -216,25 +261,6 @@ export function SummarizerPage() {
                 </div>
             </div>
 
-            <Accordion type="single" collapsible className="w-full">
-              <AccordionItem value="item-1">
-                <AccordionTrigger>
-                    <div className="flex items-center gap-2">
-                        <HelpCircle className="h-4 w-4 text-primary"/>
-                        <span>Punya pertanyaan spesifik? (Opsional)</span>
-                    </div>
-                </AccordionTrigger>
-                <AccordionContent>
-                    <div className="space-y-2 pt-2">
-                        <Label htmlFor="qa-input">Ajukan Pertanyaan Anda</Label>
-                        <Input id="qa-input" placeholder="Ketik pertanyaan Anda tentang teks sumber di sini..." value={question} onChange={(e) => setQuestion(e.target.value)} />
-                        <p className="text-xs text-muted-foreground">AI akan menjawab pertanyaan Anda berdasarkan sumber yang diberikan, bersamaan dengan output format yang Anda pilih.</p>
-                    </div>
-                </AccordionContent>
-              </AccordionItem>
-            </Accordion>
-
-
             <div className="flex justify-end">
               <Button type="submit" disabled={isPending} size="lg" className="shadow-lg hover:shadow-xl transition-shadow">
                 {isPending ? (
@@ -272,31 +298,12 @@ export function SummarizerPage() {
 
       {result && (
         <div className="space-y-8 mt-8">
-            {result.answer && (
-                <Card className="animate-in fade-in duration-500">
-                    <CardHeader>
-                        <div className="flex justify-between items-start">
-                          <div>
-                            <CardTitle className="font-headline">Jawaban untuk Pertanyaan Anda</CardTitle>
-                            <CardDescription className="mt-1">Berdasarkan sumber yang Anda berikan.</CardDescription>
-                          </div>
-                          <Button variant="ghost" size="icon" onClick={() => handleCopy(result.answer!, 'answer')} aria-label="Copy answer">
-                            {isAnswerCopied ? <Check className="h-5 w-5 text-green-500" /> : <Copy className="h-5 w-5 text-accent-foreground/80" />}
-                          </Button>
-                        </div>
-                    </CardHeader>
-                    <CardContent>
-                        <div className="text-base leading-relaxed whitespace-pre-wrap">{result.answer}</div>
-                    </CardContent>
-                </Card>
-            )}
-
             <Card className="animate-in fade-in duration-500">
               <CardHeader>
                 <div className="flex justify-between items-start">
                   <div>
                     <CardTitle className="font-headline">{getOutputTitle()}</CardTitle>
-                     {result.outputFormat === "summary" && (
+                     {result.outputFormat === "summary" && result.wordCountOriginal > 0 && (
                         <div className="text-sm text-muted-foreground mt-2 flex flex-wrap gap-x-4 gap-y-1">
                             <span>Asli: <span className="font-medium text-foreground">{result.wordCountOriginal} kata</span></span>
                             <span>Output: <span className="font-medium text-foreground">{result.wordCountSummary} kata</span></span>
@@ -312,6 +319,58 @@ export function SummarizerPage() {
               <CardContent>
                  <div className="text-base leading-relaxed whitespace-pre-wrap">{result.output}</div>
               </CardContent>
+            </Card>
+
+            <Card className="animate-in fade-in duration-500">
+                <CardHeader>
+                    <CardTitle className="font-headline flex items-center gap-2"><HelpCircle className="h-6 w-6 text-primary"/> Tanya Jawab</CardTitle>
+                    <CardDescription>Punya pertanyaan tentang teks di atas? Tanyakan di sini.</CardDescription>
+                </CardHeader>
+                <CardContent>
+                    <form onSubmit={handleQA} className="space-y-4">
+                        <div className="space-y-2">
+                            <Label htmlFor="qa-input">Pertanyaan Anda</Label>
+                            <Input 
+                                id="qa-input" 
+                                placeholder="Ketik pertanyaan Anda di sini..."
+                                value={question}
+                                onChange={(e) => setQuestion(e.target.value)}
+                                disabled={isQAPending}
+                            />
+                        </div>
+                        <div className="flex justify-end">
+                            <Button type="submit" disabled={isQAPending}>
+                                {isQAPending ? (
+                                    <>
+                                        <Loader2 className="mr-2 h-4 w-4 animate-spin"/>
+                                        Mencari Jawaban...
+                                    </>
+                                ) : (
+                                    "Tanya"
+                                )}
+                            </Button>
+                        </div>
+                    </form>
+                    
+                    {isQAPending && (
+                        <div className="mt-4 space-y-2">
+                           <Skeleton className="h-4 w-full" />
+                           <Skeleton className="h-4 w-5/6" />
+                        </div>
+                    )}
+
+                    {qaAnswer && (
+                        <div className="mt-6 border-t pt-4">
+                             <div className="flex justify-between items-start">
+                                <h4 className="font-semibold">Jawaban:</h4>
+                                <Button variant="ghost" size="icon" onClick={() => handleCopy(qaAnswer, 'answer')} aria-label="Copy answer">
+                                    {isAnswerCopied ? <Check className="h-5 w-5 text-green-500" /> : <Copy className="h-5 w-5 text-accent-foreground/80" />}
+                                </Button>
+                             </div>
+                             <p className="text-base leading-relaxed whitespace-pre-wrap mt-2">{qaAnswer}</p>
+                        </div>
+                    )}
+                </CardContent>
             </Card>
         </div>
       )}
