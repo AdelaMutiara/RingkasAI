@@ -42,7 +42,7 @@ export default function LandingPage() {
             </div>
              <div className="mt-12">
                  <Image 
-                    src="https://placehold.co/1200x600.png" 
+                    src="https://placehold.co/1200x600" 
                     alt="Dashboard RingkasAI" 
                     width={1200} 
                     height={600} 
@@ -163,7 +163,7 @@ export default function LandingPage() {
                         <CardContent className="pt-6">
                             <div className="flex items-center mb-4">
                                <Avatar>
-                                 <AvatarImage src="https://placehold.co/40x40.png" data-ai-hint="person face" />
+                                 <AvatarImage src="https://placehold.co/40x40" data-ai-hint="person face" />
                                  <AvatarFallback>AD</AvatarFallback>
                                </Avatar>
                                <div className="ml-4">
@@ -178,7 +178,7 @@ export default function LandingPage() {
                         <CardContent className="pt-6">
                              <div className="flex items-center mb-4">
                                <Avatar>
-                                 <AvatarImage src="https://placehold.co/40x40.png" data-ai-hint="woman face" />
+                                 <AvatarImage src="https://placehold.co/40x40" data-ai-hint="woman face" />
                                  <AvatarFallback>SR</AvatarFallback>
                                </Avatar>
                                <div className="ml-4">
@@ -193,7 +193,7 @@ export default function LandingPage() {
                         <CardContent className="pt-6">
                             <div className="flex items-center mb-4">
                                <Avatar>
-                                 <AvatarImage src="https://placehold.co/40x40.png" data-ai-hint="man face" />
+                                 <AvatarImage src="https://placehold.co/40x40" data-ai-hint="man face" />
                                  <AvatarFallback>BW</AvatarFallback>
                                </Avatar>
                                <div className="ml-4">
@@ -285,5 +285,3 @@ export default function LandingPage() {
     </div>
   );
 }
-
-    
