@@ -106,7 +106,7 @@ const summarizeIndonesianTextFlow = ai.defineFlow(
             instruction = 'Buat daftar pertanyaan penting berdasarkan teks sebagai daftar bernomor.';
             break;
           case 'contentIdeas':
-            instruction = 'Berdasarkan teks yang diberikan, hasilkan 5 ide konten yang menarik dalam format daftar bernomor. Setiap ide harus kreatif dan relevan dengan topik utama teks. Jangan gunakan tanda bintang (*) atau format markdown lainnya.';
+            instruction = 'Berdasarkan teks yang diberikan, hasilkan 5 ide konten yang menarik. PENTING: Format output HARUS berupa daftar bernomor (1., 2., 3., dst.). JANGAN gunakan format markdown, tanda bintang (*), atau tanda hubung (-). Setiap ide harus kreatif dan relevan dengan topik utama teks.';
             break;
         }
     }
@@ -163,7 +163,7 @@ Instruksi Anda: ${instruction}
             .join(' ');
         }
     }
-
+    
     const wordCountOriginal = originalTextForCount.split(/\s+/).filter(Boolean).length;
     const wordCountSummary = outputText.split(/\s+/).filter(Boolean).length;
 
