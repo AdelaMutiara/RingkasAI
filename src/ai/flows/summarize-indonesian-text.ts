@@ -52,34 +52,43 @@ const copyeditTool = ai.defineTool(
 );
 
 const fetchTextFromUrl = ai.defineTool(
-  {
-    name: 'fetchTextFromUrl',
-    description: 'Fetches the text content from a given website URL. Do not use for YouTube URLs.',
-    inputSchema: z.object({
-      url: z.string().describe('The URL to fetch content from.'),
-    }),
-    outputSchema: z.object({ output: z.string() }),
-  },
-  async (input) => {
-    try {
-      const response = await fetch(input.url);
-      if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`);
+    {
+      name: 'fetchTextFromUrl',
+      description: 'Fetches the text content from a given website URL. Do not use for YouTube URLs.',
+      inputSchema: z.object({
+        url: z.string().describe('The URL to fetch content from.'),
+      }),
+      outputSchema: z.object({ output: z.string() }),
+    },
+    async (input) => {
+      try {
+        const response = await fetch(input.url);
+        if (!response.ok) {
+          throw new Error(`HTTP error! status: ${response.status}`);
+        }
+        const html = await response.text();
+        const dom = new JSDOM(html);
+        const document = dom.window.document;
+  
+        // Remove script and style elements
+        document.querySelectorAll('script, style, noscript, header, footer, nav').forEach((el) => el.remove());
+  
+        // Prioritize <article> tag, fallback to <body>
+        const article = document.querySelector('article');
+        let rawText = (article ? article.textContent : document.body.textContent) || '';
+  
+        if (!rawText.trim()){
+          return { output: 'Gagal mengambil konten dari URL karena isinya kosong atau tidak dapat dideteksi.' };
+        }
+        // Clean up excessive whitespace
+        return { output: rawText.replace(/\s+/g, ' ').trim() };
+      } catch (error) {
+        console.error('Error fetching URL:', error);
+        return { output: 'Gagal mengambil konten dari URL. Pastikan URL valid dan dapat diakses.' };
       }
-      const html = await response.text();
-      const dom = new JSDOM(html);
-      dom.window.document.querySelectorAll('script, style').forEach((el) => el.remove());
-      const rawText = dom.window.document.body.textContent || '';
-      if (!rawText.trim()){
-        return { output: 'Gagal mengambil konten dari URL karena isinya kosong.' };
-      }
-      return { output: rawText };
-    } catch (error) {
-      console.error('Error fetching URL:', error);
-      return { output: 'Gagal mengambil konten dari URL. Pastikan URL valid dan dapat diakses.' };
     }
-  }
-);
+  );
+  
 
 
 const summarizeIndonesianTextFlow = ai.defineFlow(
