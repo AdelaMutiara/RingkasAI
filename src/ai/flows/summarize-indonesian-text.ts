@@ -93,7 +93,7 @@ const summarizeIndonesianTextFlow = ai.defineFlow(
     let instruction = '';
     
     if (input.question) {
-        instruction = `Jawab pertanyaan berikut: "${input.question}" HANYA berdasarkan informasi yang ada di dalam teks yang diberikan. Jika jawaban tidak dapat ditemukan di dalam teks, katakan "Informasi untuk menjawab pertanyaan tersebut tidak ditemukan dalam teks." Letakkan jawaban untuk pertanyaan ini di bidang 'jawaban' pada output JSON.`;
+        instruction = `Jawab pertanyaan berikut: "${input.question}" HANYA berdasarkan informasi yang ada di dalam teks yang diberikan. Jika jawaban tidak dapat ditemukan di dalam teks, katakan "Informasi untuk menjawab pertanyaan tersebut tidak ditemukan dalam teks." Letakkan jawaban untuk pertanyaan ini di bidang 'jawaban' pada output JSON. Jangan hasilkan output lain, hanya jawaban.`;
     } else {
         switch (input.outputFormat) {
           case 'summary':
@@ -133,7 +133,7 @@ Instruksi Anda: ${instruction}
       output: {
         schema: z.object({
           output: z.string().optional().describe("Hasil utama berdasarkan format yang diminta (ringkasan, poin penting, dll). Hanya ada jika tidak ada pertanyaan."),
-          answer: z.string().optional().describe("Jawaban atas pertanyaan spesifik pengguna. Hanya ada jika pengguna bertanya."),
+          answer: z.string().nullable().optional().describe("Jawaban atas pertanyaan spesifik pengguna. Hanya ada jika pengguna bertanya."),
         })
       }
     });
