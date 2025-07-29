@@ -135,11 +135,7 @@ export default function LandingPage() {
                     <Card>
                         <CardContent className="pt-6">
                             <div className="flex items-center mb-4">
-                               <Avatar>
-                                 <AvatarImage src="https://placehold.co/40x40" data-ai-hint="person face" />
-                                 <AvatarFallback>AD</AvatarFallback>
-                               </Avatar>
-                               <div className="ml-4">
+                               <div>
                                    <p className="font-bold">Andi Pratama</p>
                                    <p className="text-sm text-muted-foreground">Mahasiswa</p>
                                </div>
@@ -150,11 +146,7 @@ export default function LandingPage() {
                     <Card>
                         <CardContent className="pt-6">
                              <div className="flex items-center mb-4">
-                               <Avatar>
-                                 <AvatarImage src="https://placehold.co/40x40" data-ai-hint="woman face" />
-                                 <AvatarFallback>SR</AvatarFallback>
-                               </Avatar>
-                               <div className="ml-4">
+                               <div>
                                    <p className="font-bold">Siti Rahayu</p>
                                    <p className="text-sm text-muted-foreground">Content Writer</p>
                                </div>
@@ -165,11 +157,7 @@ export default function LandingPage() {
                     <Card>
                         <CardContent className="pt-6">
                             <div className="flex items-center mb-4">
-                               <Avatar>
-                                 <AvatarImage src="https://placehold.co/40x40" data-ai-hint="man face" />
-                                 <AvatarFallback>BW</AvatarFallback>
-                               </Avatar>
-                               <div className="ml-4">
+                               <div>
                                    <p className="font-bold">Budi Wijaya</p>
                                    <p className="text-sm text-muted-foreground">Product Manager</p>
                                </div>
