@@ -33,7 +33,7 @@ export default function LandingPage() {
               Ubah Teks Apapun Menjadi Ringkasan Cerdas, dalam Hitungan Detik.
             </h1>
             <p className="mt-4 max-w-3xl mx-auto text-lg text-muted-foreground">
-              Platform untuk pelajar, peneliti, dan profesional yang ingin memahami informasi lebih cepat. RingkasAI mengubah artikel panjang, PDF, bahkan video YouTube menjadi ringkasan padat.
+              Platform untuk pelajar, peneliti, dan profesional yang ingin memahami informasi lebih cepat. RingkasAI mengubah artikel panjang dan PDF menjadi ringkasan padat.
             </p>
             <div className="mt-8 flex justify-center gap-4">
               <Button asChild size="lg" className="shadow-lg hover:shadow-xl transition-shadow">
@@ -42,7 +42,7 @@ export default function LandingPage() {
             </div>
              <div className="mt-12">
                  <Image 
-                    src="https://placehold.co/1200x600" 
+                    src="https://placehold.co/1200x600.png" 
                     alt="Dashboard RingkasAI" 
                     width={1200} 
                     height={600} 
@@ -85,7 +85,7 @@ export default function LandingPage() {
                   <div className="p-4 rounded-full bg-primary/20 text-primary"><Upload className="h-8 w-8" /></div>
                 </div>
                 <h3 className="text-xl font-bold mb-2">Langkah 1: Masukkan Konten</h3>
-                <p className="text-muted-foreground">Tempel teks, unggah PDF, atau masukkan URL dari website atau video YouTube.</p>
+                <p className="text-muted-foreground">Tempel teks, unggah PDF, atau masukkan URL dari website.</p>
               </div>
               <div className="text-center">
                 <div className="flex justify-center items-center mb-4">
@@ -145,7 +145,7 @@ export default function LandingPage() {
                   <CardTitle className="mt-4">Dukung Berbagai Sumber</CardTitle>
                 </CardHeader>
                 <CardContent className="text-center">
-                   Proses teks dari artikel web atau transkrip video YouTube hanya dengan menempelkan link.
+                   Proses teks dari artikel web hanya dengan menempelkan link.
                 </CardContent>
               </Card>
             </div>
@@ -237,7 +237,7 @@ export default function LandingPage() {
                <AccordionItem value="item-4">
                 <AccordionTrigger>Jenis URL apa yang didukung?</AccordionTrigger>
                 <AccordionContent>
-                  Anda dapat menggunakan URL dari halaman web (artikel, blog) dan video YouTube yang memiliki transkrip. AI akan secara otomatis mendeteksi sumber dan mengambil konten yang relevan.
+                  Anda dapat menggunakan URL dari halaman web (artikel, blog). AI akan secara otomatis mendeteksi sumber dan mengambil konten yang relevan.
                 </AccordionContent>
               </AccordionItem>
             </Accordion>

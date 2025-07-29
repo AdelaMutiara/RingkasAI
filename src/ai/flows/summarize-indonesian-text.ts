@@ -10,7 +10,6 @@
 import {ai} from '@/ai/genkit';
 import {z} from 'genkit';
 import {JSDOM} from 'jsdom';
-import { YoutubeTranscript } from 'youtube-transcript';
 
 const OutputFormatSchema = z.enum(['summary', 'keyPoints', 'questions']);
 
@@ -45,9 +44,6 @@ const copyeditTool = ai.defineTool(
     }),
   },
   async (input) => {
-    // In a real scenario, this could involve more complex editing logic.
-    // For this example, we'll just return the text as is,
-    // relying on the model's intelligence to use the tool correctly.
     return { output: input.text.trim() };
   }
 );
@@ -79,33 +75,6 @@ const fetchTextFromUrl = ai.defineTool(
   }
 );
 
-const fetchTranscriptFromYouTubeUrl = ai.defineTool(
-  {
-    name: 'fetchTranscriptFromYouTubeUrl',
-    description: 'Fetches the transcript from a given YouTube video URL. Use this tool if the URL is a YouTube link.',
-    inputSchema: z.object({
-      url: z.string().describe('The YouTube URL to fetch the transcript from.'),
-    }),
-    outputSchema: z.object({ output: z.string() }),
-  },
-  async ({ url }) => {
-    try {
-      const transcript = await YoutubeTranscript.fetchTranscript(url);
-      const transcriptText = transcript.map((item) => item.text).join(' ').trim();
-      
-      if (!transcriptText) {
-          return { output: 'Gagal memproses transkrip. Transkrip video ini kosong atau tidak dapat diakses.' };
-      }
-      
-      return { output: transcriptText };
-    } catch (error) {
-      console.error('Error fetching YouTube transcript:', error);
-      return { output: 'Gagal mengambil transkrip dari URL YouTube. Video mungkin tidak memiliki transkrip yang tersedia atau fitur transkrip dinonaktifkan.' };
-    }
-  }
-);
-
-
 const summarizeIndonesianTextFlow = ai.defineFlow(
   {
     name: 'summarizeIndonesianTextFlow',
@@ -133,7 +102,7 @@ const summarizeIndonesianTextFlow = ai.defineFlow(
     const prompt = `Anda adalah asisten AI yang ahli dalam memproses teks berbahasa Indonesia. Tugas Anda adalah memproses teks atau URL yang diberikan sesuai dengan instruksi.
 PENTING: Seluruh output Anda HARUS dalam Bahasa Indonesia. Jangan pernah menggunakan Bahasa Inggris.
 
-Jika URL yang diberikan, gunakan alat yang tersedia untuk mengambil kontennya. Gunakan alat transkrip YouTube jika itu adalah link YouTube.
+Jika URL yang diberikan, gunakan alat yang tersedia untuk mengambil kontennya.
 Jika sebuah alat mengembalikan pesan error (misalnya "Gagal mengambil..."), sampaikan pesan error tersebut kepada pengguna DALAM BAHASA INDONESIA sebagai jawaban akhir Anda. Jangan mencoba memprosesnya lebih lanjut.
 Jika teks dan URL diberikan, prioritaskan teks yang diberikan.
 
@@ -145,7 +114,7 @@ Output:`;
 
     const llmResponse = await ai.generate({
       prompt: prompt,
-      tools: [fetchTextFromUrl, fetchTranscriptFromYouTubeUrl, copyeditTool],
+      tools: [fetchTextFromUrl, copyeditTool],
       toolChoice: 'auto'
     });
 
