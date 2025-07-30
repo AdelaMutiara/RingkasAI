@@ -13,12 +13,14 @@ import {z} from 'genkit';
 import {JSDOM} from 'jsdom';
 
 const OutputFormatSchema = z.enum(['summary', 'keyPoints', 'questions', 'contentIdeas']);
+const OutputLanguageSchema = z.enum(['indonesian', 'english', 'arabic']);
 
 const SummarizeIndonesianTextInputSchema = z.object({
   text: z.string().optional().describe('The Indonesian text to summarize.'),
   url: z.string().optional().describe('The URL of the Indonesian text to summarize.'),
   question: z.string().optional().describe('User\'s question about the source text.'),
   outputFormat: OutputFormatSchema.default('summary'),
+  outputLanguage: OutputLanguageSchema.default('indonesian'),
 });
 export type SummarizeIndonesianTextInput = z.infer<typeof SummarizeIndonesianTextInputSchema>;
 
@@ -28,6 +30,7 @@ const SummarizeIndonesianTextOutputSchema = z.object({
   wordCountOriginal: z.number().describe('The word count of the original text.'),
   wordCountSummary: z.number().describe('The word count of the summarized text.'),
   outputFormat: OutputFormatSchema.default('summary'),
+  outputLanguage: OutputLanguageSchema.default('indonesian'),
 });
 export type SummarizeIndonesianTextOutput = z.infer<typeof SummarizeIndonesianTextOutputSchema>;
 
@@ -122,20 +125,24 @@ const summarizeIndonesianTextFlow = ai.defineFlow(
     
     const textToProcess = input.text || '';
     const urlToProcess = input.url || '';
+    const languageInstruction = `Output HARUS dalam bahasa ${input.outputLanguage}.`;
     
     const llmResponse = await ai.generate({
-      prompt: `Anda adalah asisten AI yang ahli dalam memproses teks berbahasa Indonesia. Tugas Anda adalah memproses teks atau URL yang diberikan sesuai dengan instruksi yang spesifik.
-PENTING: Seluruh output Anda HARUS dalam Bahasa Indonesia. Jangan pernah menggunakan Bahasa Inggris.
+      prompt: `Anda adalah asisten AI yang ahli dalam memproses teks berbahasa Indonesia dan seorang penerjemah multibahasa. Tugas Anda adalah memproses teks atau URL yang diberikan (yang selalu dalam Bahasa Indonesia) sesuai dengan instruksi yang spesifik.
+PENTING: Seluruh pemahaman dan pemrosesan internal Anda HARUS didasarkan pada teks sumber berbahasa Indonesia.
 
-Jika URL yang diberikan, gunakan alat 'fetchTextFromUrl' untuk mengambil kontennya terlebih dahulu. Setelah mendapatkan teks, atau jika teks sudah disediakan, prioritaskan untuk menerapkan instruksi pemrosesan di bawah ini.
-Setelah mendapatkan teks dari URL, atau jika teks sudah disediakan dari awal, Anda HARUS menerapkan instruksi pemrosesan di bawah ini pada teks tersebut.
-Jika sebuah alat mengembalikan pesan error (misalnya "Gagal mengambil..."), sampaikan pesan error tersebut kepada pengguna DALAM BAHASA INDONESIA sebagai jawaban akhir Anda. Jangan mencoba memprosesnya lebih lanjut.
-Jika teks dan URL diberikan, prioritaskan teks yang diberikan.
+Proses Kerja:
+1. Jika URL yang diberikan, gunakan alat 'fetchTextFromUrl' untuk mengambil kontennya terlebih dahulu. Konten ini berbahasa Indonesia.
+2. Setelah mendapatkan teks (baik dari URL atau input langsung), terapkan instruksi pemrosesan di bawah ini pada teks tersebut.
+3. Setelah mendapatkan hasilnya, terjemahkan hasil tersebut ke dalam bahasa yang diminta.
+4. Jika sebuah alat mengembalikan pesan error (misalnya "Gagal mengambil..."), sampaikan pesan error tersebut kepada pengguna DALAM BAHASA INDONESIA sebagai jawaban akhir Anda. Jangan mencoba memprosesnya lebih lanjut.
+5. Jika teks dan URL diberikan, prioritaskan teks yang diberikan.
 
-Teks Asli: ${textToProcess}
-URL: ${urlToProcess}
+Teks Asli (Bahasa Indonesia): ${textToProcess}
+URL (Bahasa Indonesia): ${urlToProcess}
 
-Instruksi Anda: ${instruction}
+Instruksi Pemrosesan: ${instruction}
+Bahasa Output: ${languageInstruction}
 `,
       tools: [fetchTextFromUrl, copyeditTool],
       toolChoice: 'auto',
@@ -181,7 +188,8 @@ Instruksi Anda: ${instruction}
       answer: answerText,
       wordCountOriginal,
       wordCountSummary,
-      outputFormat: input.outputFormat
+      outputFormat: input.outputFormat,
+      outputLanguage: input.outputLanguage,
     };
   }
 );

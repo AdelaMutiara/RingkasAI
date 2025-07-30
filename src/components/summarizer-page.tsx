@@ -1,3 +1,4 @@
+
 "use client";
 
 import { useState, useTransition, useCallback } from "react";
@@ -18,6 +19,8 @@ pdfjs.GlobalWorkerOptions.workerSrc = `//unpkg.com/pdfjs-dist@${pdfjs.version}/b
 
 type InputSource = "text" | "pdf" | "url";
 type OutputFormat = "summary" | "keyPoints" | "questions" | "contentIdeas";
+type OutputLanguage = "indonesian" | "english" | "arabic";
+
 
 interface StoredSource {
     text?: string;
@@ -37,6 +40,7 @@ export function SummarizerPage() {
   const [isAnswerCopied, setIsAnswerCopied] = useState(false);
   const [inputSource, setInputSource] = useState<InputSource>("text");
   const [outputFormat, setOutputFormat] = useState<OutputFormat>("summary");
+  const [outputLanguage, setOutputLanguage] = useState<OutputLanguage>("indonesian");
   const [qaAnswer, setQaAnswer] = useState<string | null>(null);
   const [storedSource, setStoredSource] = useState<StoredSource | null>(null);
 
@@ -77,7 +81,7 @@ export function SummarizerPage() {
   const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     let hasInput = false;
-    let payload: { outputFormat: OutputFormat, text?: string, url?: string, question?: string } = { outputFormat };
+    let payload: { outputFormat: OutputFormat, outputLanguage: OutputLanguage, text?: string, url?: string, question?: string } = { outputFormat, outputLanguage };
     let sourceToStore: StoredSource = {};
 
     if (inputSource === "text" && inputText.trim()) {
@@ -138,7 +142,8 @@ export function SummarizerPage() {
     const payload = {
         ...storedSource,
         question,
-        outputFormat: 'summary' // A default value, not really used for QA
+        outputFormat: 'summary', // A default value, not really used for QA
+        outputLanguage: outputLanguage,
     };
     
     setQaAnswer(null);
@@ -243,22 +248,38 @@ export function SummarizerPage() {
               </TabsContent>
             </Tabs>
             
-            <div>
-              <Label className="text-base font-semibold">Format Output</Label>
-               <div className="flex flex-wrap items-center gap-2 mt-2">
-                    <Button type="button" variant={outputFormat === 'summary' ? 'default' : 'outline'} onClick={() => setOutputFormat('summary')}>
-                        📄 Ringkasan
-                    </Button>
-                    <Button type="button" variant={outputFormat === 'keyPoints' ? 'default' : 'outline'} onClick={() => setOutputFormat('keyPoints')}>
-                        🎯 Poin Penting
-                    </Button>
-                    <Button type="button" variant={outputFormat === 'questions' ? 'default' : 'outline'} onClick={() => setOutputFormat('questions')}>
-                        ❓ Pertanyaan
-                    </Button>
-                    <Button type="button" variant={outputFormat === 'contentIdeas' ? 'default' : 'outline'} onClick={() => setOutputFormat('contentIdeas')}>
-                        💡 Ide Konten
-                    </Button>
-                </div>
+            <div className="grid md:grid-cols-2 gap-6">
+              <div>
+                <Label className="text-base font-semibold">Format Output</Label>
+                 <div className="flex flex-wrap items-center gap-2 mt-2">
+                      <Button type="button" variant={outputFormat === 'summary' ? 'default' : 'outline'} onClick={() => setOutputFormat('summary')}>
+                          📄 Ringkasan
+                      </Button>
+                      <Button type="button" variant={outputFormat === 'keyPoints' ? 'default' : 'outline'} onClick={() => setOutputFormat('keyPoints')}>
+                          🎯 Poin Penting
+                      </Button>
+                      <Button type="button" variant={outputFormat === 'questions' ? 'default' : 'outline'} onClick={() => setOutputFormat('questions')}>
+                          ❓ Pertanyaan
+                      </Button>
+                      <Button type="button" variant={outputFormat === 'contentIdeas' ? 'default' : 'outline'} onClick={() => setOutputFormat('contentIdeas')}>
+                          💡 Ide Konten
+                      </Button>
+                  </div>
+              </div>
+               <div>
+                <Label className="text-base font-semibold">Bahasa Output</Label>
+                 <div className="flex flex-wrap items-center gap-2 mt-2">
+                      <Button type="button" variant={outputLanguage === 'indonesian' ? 'default' : 'outline'} onClick={() => setOutputLanguage('indonesian')}>
+                          🇮🇩 Indonesian
+                      </Button>
+                      <Button type="button" variant={outputLanguage === 'english' ? 'default' : 'outline'} onClick={() => setOutputLanguage('english')}>
+                          🇬🇧 English
+                      </Button>
+                      <Button type="button" variant={outputLanguage === 'arabic' ? 'default' : 'outline'} onClick={() => setOutputLanguage('arabic')}>
+                          🇸🇦 Arabic
+                      </Button>
+                  </div>
+              </div>
             </div>
 
             <div className="flex justify-end">
