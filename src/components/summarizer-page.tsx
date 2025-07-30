@@ -270,13 +270,13 @@ export function SummarizerPage() {
                 <Label className="text-base font-semibold">Bahasa Output</Label>
                  <div className="flex flex-wrap items-center gap-2 mt-2">
                       <Button type="button" variant={outputLanguage === 'indonesian' ? 'default' : 'outline'} onClick={() => setOutputLanguage('indonesian')}>
-                          🇮🇩 Indonesian
+                          Indonesian
                       </Button>
                       <Button type="button" variant={outputLanguage === 'english' ? 'default' : 'outline'} onClick={() => setOutputLanguage('english')}>
-                          🇬🇧 English
+                          English
                       </Button>
                       <Button type="button" variant={outputLanguage === 'arabic' ? 'default' : 'outline'} onClick={() => setOutputLanguage('arabic')}>
-                          🇸🇦 Arabic
+                          Arabic
                       </Button>
                   </div>
               </div>
