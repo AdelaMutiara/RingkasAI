@@ -142,7 +142,7 @@ Bahasa Output: ${languageInstruction}
       tools: [fetchTextFromUrl, copyeditTool],
       toolChoice: 'auto',
       output: {
-        schema: z.string().nullable().optional().describe("Hasil utama berdasarkan format yang diminta (ringkasan, poin penting, dll)."),
+        schema: z.string().describe("Hasil utama berdasarkan format yang diminta (ringkasan, poin penting, dll)."),
       }
     });
 
