@@ -305,7 +305,7 @@ export function SummarizerPage() {
               </TabsContent>
             </Tabs>
             
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div className="space-y-6">
                 <div className="space-y-2">
                     <Label className="text-base font-semibold">Format Output</Label>
                     <div className="flex flex-wrap items-center gap-2">
