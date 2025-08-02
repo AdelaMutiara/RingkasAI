@@ -3,10 +3,11 @@
 
 import { useState, useTransition, useCallback } from "react";
 import { summarizeIndonesianText, SummarizeIndonesianTextOutput } from "@/ai/flows/summarize-indonesian-text";
+import { analyzeSentiment, AnalyzeSentimentOutput } from "@/ai/flows/analyze-sentiment-flow";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
-import { Loader2, Copy, Check, Upload, Link as LinkIcon, FileText, Sparkles, HelpCircle } from "lucide-react";
+import { Loader2, Copy, Check, Upload, Link as LinkIcon, FileText, Sparkles, HelpCircle, Smile, Frown, Meh } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -35,6 +36,7 @@ export function SummarizerPage() {
   const [result, setResult] = useState<SummarizeIndonesianTextOutput | null>(null);
   const [isPending, startTransition] = useTransition();
   const [isQAPending, startQATransition] = useTransition();
+  const [isSentimentPending, startSentimentTransition] = useTransition();
   const { toast } = useToast();
   const [isCopied, setIsCopied] = useState(false);
   const [isAnswerCopied, setIsAnswerCopied] = useState(false);
@@ -42,6 +44,7 @@ export function SummarizerPage() {
   const [outputFormat, setOutputFormat] = useState<OutputFormat>("summary");
   const [outputLanguage, setOutputLanguage] = useState<OutputLanguage>("indonesian");
   const [qaAnswer, setQaAnswer] = useState<string | null>(null);
+  const [sentimentResult, setSentimentResult] = useState<AnalyzeSentimentOutput | null>(null);
   const [storedSource, setStoredSource] = useState<StoredSource | null>(null);
 
   const handlePdfUpload = async (file: File) => {
@@ -110,6 +113,7 @@ export function SummarizerPage() {
     setResult(null);
     setQaAnswer(null);
     setQuestion("");
+    setSentimentResult(null);
     setStoredSource(sourceToStore);
 
     startTransition(async () => {
@@ -161,8 +165,40 @@ export function SummarizerPage() {
         setQaAnswer(null);
       }
     });
-
   }
+
+  const handleSentimentAnalysis = () => {
+    if (!storedSource || (!storedSource.text && !storedSource.url)) {
+        toast({ title: "Teks Asli Tidak Ditemukan", description: "Tidak ada teks untuk dianalisis.", variant: "destructive" });
+        return;
+    }
+
+    // Since URL content is fetched and stored in the 'history' of the first call,
+    // we need to rely on the original word count text which should be the full text.
+    const textToAnalyze = storedSource.text || (result?.wordCountOriginal ? result.output : ''); // Fallback logic needs improvement
+
+    if (!textToAnalyze) {
+        toast({ title: "Teks Tidak Ditemukan", description: "Tidak dapat menemukan teks yang diekstrak dari URL untuk dianalisis.", variant: "destructive" });
+        return;
+    }
+
+    setSentimentResult(null);
+    startSentimentTransition(async () => {
+        try {
+            const sentiment = await analyzeSentiment({ text: textToAnalyze });
+            setSentimentResult(sentiment);
+        } catch (error) {
+            console.error("Sentiment analysis error:", error);
+            toast({
+                title: "Error Analisis Sentimen",
+                description: `Gagal menganalisis sentimen. ${error instanceof Error ? error.message : ''}`,
+                variant: "destructive",
+            });
+            setSentimentResult(null);
+        }
+    });
+  }
+
 
   const handleCopy = useCallback((textToCopy: string, type: 'output' | 'answer') => {
     navigator.clipboard.writeText(textToCopy).then(() => {
@@ -195,6 +231,15 @@ export function SummarizerPage() {
         return "Hasil";
     }
   }
+  
+  const getSentimentIcon = (sentiment: "Positive" | "Negative" | "Neutral") => {
+    switch (sentiment) {
+        case "Positive": return <Smile className="h-6 w-6 text-green-500" />;
+        case "Negative": return <Frown className="h-6 w-6 text-red-500" />;
+        case "Neutral": return <Meh className="h-6 w-6 text-yellow-500" />;
+    }
+  }
+
 
   return (
     <div className="container max-w-4xl mx-auto p-4 md:py-12">
@@ -248,7 +293,7 @@ export function SummarizerPage() {
               </TabsContent>
             </Tabs>
             
-            <div className="space-y-6">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               <div>
                 <Label className="text-base font-semibold">Format Output</Label>
                  <div className="flex flex-wrap items-center gap-2 mt-2">
@@ -332,15 +377,50 @@ export function SummarizerPage() {
                         </div>
                      )}
                   </div>
-                  <Button variant="ghost" size="icon" onClick={() => handleCopy(result.output, 'output')} aria-label="Copy output">
-                    {isCopied ? <Check className="h-5 w-5 text-green-500" /> : <Copy className="h-5 w-5 text-accent-foreground/80" />}
-                  </Button>
+                  <div className="flex items-center gap-2">
+                    <Button variant="outline" size="sm" onClick={handleSentimentAnalysis} disabled={isSentimentPending}>
+                        {isSentimentPending ? <Loader2 className="mr-2 h-4 w-4 animate-spin"/> : '✨'}
+                        Analisis Sentimen
+                    </Button>
+                    <Button variant="ghost" size="icon" onClick={() => handleCopy(result.output, 'output')} aria-label="Copy output">
+                        {isCopied ? <Check className="h-5 w-5 text-green-500" /> : <Copy className="h-5 w-5 text-accent-foreground/80" />}
+                    </Button>
+                  </div>
                 </div>
               </CardHeader>
               <CardContent>
                  <div className="text-base leading-relaxed whitespace-pre-wrap">{result.output}</div>
               </CardContent>
             </Card>
+            
+            {isSentimentPending && (
+                 <Card className="animate-in fade-in duration-500">
+                    <CardContent className="pt-6">
+                        <div className="flex items-center space-x-4">
+                            <Skeleton className="h-12 w-12 rounded-full" />
+                            <div className="space-y-2">
+                                <Skeleton className="h-4 w-[250px]" />
+                                <Skeleton className="h-4 w-[200px]" />
+                            </div>
+                        </div>
+                    </CardContent>
+                 </Card>
+            )}
+
+            {sentimentResult && (
+                <Card className="animate-in fade-in duration-500">
+                    <CardHeader>
+                        <CardTitle className="font-headline flex items-center gap-2">Analisis Sentimen</CardTitle>
+                    </CardHeader>
+                    <CardContent className="flex items-start gap-4">
+                        <div>{getSentimentIcon(sentimentResult.sentiment)}</div>
+                        <div>
+                            <p className="font-semibold text-lg">{sentimentResult.sentiment}</p>
+                            <p className="text-muted-foreground">{sentimentResult.explanation}</p>
+                        </div>
+                    </CardContent>
+                </Card>
+            )}
 
             <Card className="animate-in fade-in duration-500">
                 <CardHeader>
@@ -398,5 +478,3 @@ export function SummarizerPage() {
     </div>
   );
 }
-
-    
