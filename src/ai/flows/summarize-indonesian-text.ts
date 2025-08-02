@@ -9,7 +9,7 @@
  */
 
 import {ai} from '@/ai/genkit';
-import {z} from 'genkit';
+import {z} from 'zod';
 import {JSDOM} from 'jsdom';
 
 const OutputFormatSchema = z.enum(['summary', 'keyPoints', 'questions', 'contentIdeas']);
@@ -18,7 +18,6 @@ const OutputLanguageSchema = z.enum(['indonesian', 'english', 'arabic']);
 const SummarizeIndonesianTextInputSchema = z.object({
   text: z.string().optional().describe('The Indonesian text to summarize.'),
   url: z.string().optional().describe('The URL of the Indonesian text to summarize.'),
-  question: z.string().optional().describe('User\'s question about the source text.'),
   outputFormat: OutputFormatSchema.default('summary'),
   outputLanguage: OutputLanguageSchema.default('indonesian'),
 });
@@ -26,7 +25,7 @@ export type SummarizeIndonesianTextInput = z.infer<typeof SummarizeIndonesianTex
 
 const SummarizeIndonesianTextOutputSchema = z.object({
   output: z.string().describe('The processed output based on the selected format.'),
-  answer: z.string().nullable().optional().describe('The answer to the user\'s question.'),
+  originalText: z.string().describe('The original text that was processed.'),
   wordCountOriginal: z.number().describe('The word count of the original text.'),
   wordCountSummary: z.number().describe('The word count of the summarized text.'),
   outputFormat: OutputFormatSchema.default('summary'),
@@ -104,23 +103,19 @@ const summarizeIndonesianTextFlow = ai.defineFlow(
     
     let instruction = '';
     
-    if (input.question) {
-        instruction = `Jawab pertanyaan berikut: "${input.question}" HANYA berdasarkan informasi yang ada di dalam teks yang diberikan. Jika jawaban tidak dapat ditemukan di dalam teks, katakan "Informasi untuk menjawab pertanyaan tersebut tidak ditemukan dalam teks."`;
-    } else {
-        switch (input.outputFormat) {
-          case 'summary':
-            instruction = 'Buat ringkasan singkat dari teks, tidak lebih dari 30% dari panjang aslinya, sambil mempertahankan informasi utama.';
-            break;
-          case 'keyPoints':
-            instruction = 'Ekstrak poin-poin penting dari teks sebagai daftar berpoin. PENTING: Gunakan HANYA karakter bullet point (•) untuk setiap poin. JANGAN gunakan tanda bintang (*) atau tanda hubung (-).';
-            break;
-          case 'questions':
-            instruction = 'Buat daftar pertanyaan penting berdasarkan teks sebagai daftar bernomor.';
-            break;
-          case 'contentIdeas':
-            instruction = 'Berdasarkan teks yang diberikan, hasilkan 5 ide konten yang menarik. PENTING: Format output HARUS berupa daftar bernomor (1., 2., 3., dst.). JANGAN gunakan format markdown, tanda bintang (*), atau tanda hubung (-). Setiap ide harus kreatif dan relevan dengan topik utama teks.';
-            break;
-        }
+    switch (input.outputFormat) {
+      case 'summary':
+        instruction = 'Buat ringkasan singkat dari teks, tidak lebih dari 30% dari panjang aslinya, sambil mempertahankan informasi utama.';
+        break;
+      case 'keyPoints':
+        instruction = 'Ekstrak poin-poin penting dari teks sebagai daftar berpoin. PENTING: Gunakan HANYA karakter bullet point (•) untuk setiap poin. JANGAN gunakan tanda bintang (*) atau tanda hubung (-).';
+        break;
+      case 'questions':
+        instruction = 'Buat daftar pertanyaan penting berdasarkan teks sebagai daftar bernomor.';
+        break;
+      case 'contentIdeas':
+        instruction = 'Berdasarkan teks yang diberikan, hasilkan 5 ide konten yang menarik. PENTING: Format output HARUS berupa daftar bernomor (1., 2., 3., dst.). JANGAN gunakan format markdown, tanda bintang (*), atau tanda hubung (-). Setiap ide harus kreatif dan relevan dengan topik utama teks.';
+        break;
     }
     
     const textToProcess = input.text || '';
@@ -147,20 +142,11 @@ Bahasa Output: ${languageInstruction}
       tools: [fetchTextFromUrl, copyeditTool],
       toolChoice: 'auto',
       output: {
-        schema: z.object({
-          output: z.string().nullable().optional().describe("Hasil utama berdasarkan format yang diminta (ringkasan, poin penting, dll). Hanya ada jika tidak ada pertanyaan."),
-          answer: z.string().nullable().optional().describe("Jawaban atas pertanyaan spesifik pengguna. Hanya ada jika pengguna bertanya."),
-        })
+        schema: z.string().nullable().optional().describe("Hasil utama berdasarkan format yang diminta (ringkasan, poin penting, dll)."),
       }
     });
 
-    const outputData = llmResponse.output;
-    if (!outputData) {
-        throw new Error('Gagal menghasilkan output dari AI.');
-    }
-
-    const outputText = outputData.output || '';
-    const answerText = outputData.answer;
+    const outputText = llmResponse.output || '';
 
     let originalTextForCount = textToProcess;
     if (llmResponse.history) {
@@ -185,7 +171,7 @@ Bahasa Output: ${languageInstruction}
 
     return {
       output: outputText,
-      answer: answerText,
+      originalText: originalTextForCount,
       wordCountOriginal,
       wordCountSummary,
       outputFormat: input.outputFormat,
@@ -193,5 +179,3 @@ Bahasa Output: ${languageInstruction}
     };
   }
 );
-
-    

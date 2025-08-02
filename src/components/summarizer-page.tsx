@@ -4,6 +4,7 @@
 import { useState, useTransition, useCallback } from "react";
 import { summarizeIndonesianText, SummarizeIndonesianTextOutput } from "@/ai/flows/summarize-indonesian-text";
 import { analyzeSentiment, AnalyzeSentimentOutput } from "@/ai/flows/analyze-sentiment-flow";
+import { answerQuestion, AnswerQuestionOutput } from "@/ai/flows/answer-question-flow";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
@@ -23,11 +24,6 @@ type OutputFormat = "summary" | "keyPoints" | "questions" | "contentIdeas";
 type OutputLanguage = "indonesian" | "english" | "arabic";
 
 
-interface StoredSource {
-    text?: string;
-    url?: string;
-}
-
 export function SummarizerPage() {
   const [inputText, setInputText] = useState("");
   const [url, setUrl] = useState("");
@@ -45,8 +41,7 @@ export function SummarizerPage() {
   const [outputLanguage, setOutputLanguage] = useState<OutputLanguage>("indonesian");
   const [qaAnswer, setQaAnswer] = useState<string | null>(null);
   const [sentimentResult, setSentimentResult] = useState<AnalyzeSentimentOutput | null>(null);
-  const [storedSource, setStoredSource] = useState<StoredSource | null>(null);
-
+  
   const handlePdfUpload = async (file: File) => {
     if (!file) return;
     setFileName(file.name);
@@ -85,19 +80,15 @@ export function SummarizerPage() {
     e.preventDefault();
     let hasInput = false;
     let payload: { outputFormat: OutputFormat, outputLanguage: OutputLanguage, text?: string, url?: string, question?: string } = { outputFormat, outputLanguage };
-    let sourceToStore: StoredSource = {};
 
     if (inputSource === "text" && inputText.trim()) {
       payload.text = inputText;
-      sourceToStore.text = inputText;
       hasInput = true;
     } else if (inputSource === "pdf" && inputText.trim()) {
       payload.text = inputText;
-      sourceToStore.text = inputText;
       hasInput = true;
     } else if (inputSource === "url" && url.trim()) {
       payload.url = url;
-      sourceToStore.url = url;
       hasInput = true;
     }
 
@@ -114,7 +105,6 @@ export function SummarizerPage() {
     setQaAnswer(null);
     setQuestion("");
     setSentimentResult(null);
-    setStoredSource(sourceToStore);
 
     startTransition(async () => {
       try {
@@ -134,26 +124,24 @@ export function SummarizerPage() {
 
   const handleQA = (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
-    if (!question.trim() || !storedSource) {
+    if (!question.trim() || !result?.originalText) {
       toast({
-        title: "Pertanyaan diperlukan",
-        description: "Silakan masukkan pertanyaan Anda.",
+        title: "Pertanyaan atau Teks Sumber Diperlukan",
+        description: "Pastikan Anda telah menghasilkan ringkasan dan memasukkan pertanyaan.",
         variant: "destructive",
       });
       return;
     }
 
     const payload = {
-        ...storedSource,
+        sourceText: result.originalText,
         question,
-        outputFormat: 'summary' as OutputFormat,
-        outputLanguage: outputLanguage,
     };
     
     setQaAnswer(null);
     startQATransition(async () => {
       try {
-        const qaResult = await summarizeIndonesianText(payload);
+        const qaResult = await answerQuestion(payload);
         setQaAnswer(qaResult.answer || "Tidak ada jawaban yang ditemukan.");
       } catch (error) {
          console.error("QA error:", error);
@@ -168,36 +156,15 @@ export function SummarizerPage() {
   }
 
   const handleSentimentAnalysis = async () => {
-    if (!storedSource || (!storedSource.text && !storedSource.url)) {
-        toast({ title: "Teks Asli Tidak Ditemukan", description: "Tidak ada teks untuk dianalisis.", variant: "destructive" });
-        return;
-    }
-
-    let textToAnalyze = storedSource.text;
-
-    if (!textToAnalyze && storedSource.url) {
-        // If the original input was a URL, we need to fetch its content again
-        // because the full text isn't directly available on the client-side.
-        // A better approach would be to return the fetched text from the first call.
-        // For now, we make a call specifically to get the text for analysis.
-        try {
-            const tempResult = await summarizeIndonesianText({ url: storedSource.url, outputFormat: 'summary', outputLanguage: 'indonesian' });
-            textToAnalyze = tempResult.output; // This is a workaround
-        } catch(e) {
-             toast({ title: "Gagal Mengambil Teks URL", description: "Tidak dapat mengambil kembali konten dari URL untuk dianalisis.", variant: "destructive" });
-             return;
-        }
-    }
-    
-    if (!textToAnalyze) {
-        toast({ title: "Teks Tidak Ditemukan", description: "Tidak dapat menemukan teks untuk dianalisis.", variant: "destructive" });
+    if (!result?.originalText) {
+        toast({ title: "Teks Asli Tidak Ditemukan", description: "Tidak ada teks untuk dianalisis. Harap proses teks terlebih dahulu.", variant: "destructive" });
         return;
     }
 
     setSentimentResult(null);
     startSentimentTransition(async () => {
         try {
-            const sentiment = await analyzeSentiment({ text: textToAnalyze });
+            const sentiment = await analyzeSentiment({ text: result.originalText });
             setSentimentResult(sentiment);
         } catch (error) {
             console.error("Sentiment analysis error:", error);
