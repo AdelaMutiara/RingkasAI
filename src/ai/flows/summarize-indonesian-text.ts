@@ -138,15 +138,14 @@ URL (Bahasa Indonesia): ${urlToProcess}
 
 Instruksi Pemrosesan: ${instruction}
 Bahasa Output: ${languageInstruction}
+
+PENTING: Berikan output HANYA sebagai teks mentah (raw text). JANGAN membungkusnya dalam format JSON atau objek apa pun.
 `,
       tools: [fetchTextFromUrl, copyeditTool],
       toolChoice: 'auto',
-      output: {
-        schema: z.string().describe("Hasil utama berdasarkan format yang diminta (ringkasan, poin penting, dll)."),
-      }
     });
 
-    const outputText = llmResponse.output || '';
+    const outputText = llmResponse.text;
 
     let originalTextForCount = textToProcess;
     if (llmResponse.history) {
@@ -179,4 +178,3 @@ Bahasa Output: ${languageInstruction}
     };
   }
 );
-
