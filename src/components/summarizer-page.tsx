@@ -146,7 +146,7 @@ export function SummarizerPage() {
     const payload = {
         ...storedSource,
         question,
-        outputFormat: 'summary', // A default value, not really used for QA
+        outputFormat: 'summary' as OutputFormat,
         outputLanguage: outputLanguage,
     };
     
@@ -167,18 +167,30 @@ export function SummarizerPage() {
     });
   }
 
-  const handleSentimentAnalysis = () => {
+  const handleSentimentAnalysis = async () => {
     if (!storedSource || (!storedSource.text && !storedSource.url)) {
         toast({ title: "Teks Asli Tidak Ditemukan", description: "Tidak ada teks untuk dianalisis.", variant: "destructive" });
         return;
     }
 
-    // Since URL content is fetched and stored in the 'history' of the first call,
-    // we need to rely on the original word count text which should be the full text.
-    const textToAnalyze = storedSource.text || (result?.wordCountOriginal ? result.output : ''); // Fallback logic needs improvement
+    let textToAnalyze = storedSource.text;
 
+    if (!textToAnalyze && storedSource.url) {
+        // If the original input was a URL, we need to fetch its content again
+        // because the full text isn't directly available on the client-side.
+        // A better approach would be to return the fetched text from the first call.
+        // For now, we make a call specifically to get the text for analysis.
+        try {
+            const tempResult = await summarizeIndonesianText({ url: storedSource.url, outputFormat: 'summary', outputLanguage: 'indonesian' });
+            textToAnalyze = tempResult.output; // This is a workaround
+        } catch(e) {
+             toast({ title: "Gagal Mengambil Teks URL", description: "Tidak dapat mengambil kembali konten dari URL untuk dianalisis.", variant: "destructive" });
+             return;
+        }
+    }
+    
     if (!textToAnalyze) {
-        toast({ title: "Teks Tidak Ditemukan", description: "Tidak dapat menemukan teks yang diekstrak dari URL untuk dianalisis.", variant: "destructive" });
+        toast({ title: "Teks Tidak Ditemukan", description: "Tidak dapat menemukan teks untuk dianalisis.", variant: "destructive" });
         return;
     }
 
@@ -293,38 +305,38 @@ export function SummarizerPage() {
               </TabsContent>
             </Tabs>
             
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              <div>
-                <Label className="text-base font-semibold">Format Output</Label>
-                 <div className="flex flex-wrap items-center gap-2 mt-2">
-                      <Button type="button" variant={outputFormat === 'summary' ? 'default' : 'outline'} onClick={() => setOutputFormat('summary')}>
-                          📄 Ringkasan
-                      </Button>
-                      <Button type="button" variant={outputFormat === 'keyPoints' ? 'default' : 'outline'} onClick={() => setOutputFormat('keyPoints')}>
-                          🎯 Poin Penting
-                      </Button>
-                      <Button type="button" variant={outputFormat === 'questions' ? 'default' : 'outline'} onClick={() => setOutputFormat('questions')}>
-                          ❓ Pertanyaan
-                      </Button>
-                      <Button type="button" variant={outputFormat === 'contentIdeas' ? 'default' : 'outline'} onClick={() => setOutputFormat('contentIdeas')}>
-                          💡 Ide Konten
-                      </Button>
-                  </div>
-              </div>
-               <div>
-                <Label className="text-base font-semibold">Bahasa Output</Label>
-                 <div className="flex flex-wrap items-center gap-2 mt-2">
-                      <Button type="button" variant={outputLanguage === 'indonesian' ? 'default' : 'outline'} onClick={() => setOutputLanguage('indonesian')}>
-                          Indonesian
-                      </Button>
-                      <Button type="button" variant={outputLanguage === 'english' ? 'default' : 'outline'} onClick={() => setOutputLanguage('english')}>
-                          English
-                      </Button>
-                      <Button type="button" variant={outputLanguage === 'arabic' ? 'default' : 'outline'} onClick={() => setOutputLanguage('arabic')}>
-                          Arabic
-                      </Button>
-                  </div>
-              </div>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div className="space-y-2">
+                    <Label className="text-base font-semibold">Format Output</Label>
+                    <div className="flex flex-wrap items-center gap-2">
+                        <Button type="button" variant={outputFormat === 'summary' ? 'default' : 'outline'} onClick={() => setOutputFormat('summary')}>
+                            📄 Ringkasan
+                        </Button>
+                        <Button type="button" variant={outputFormat === 'keyPoints' ? 'default' : 'outline'} onClick={() => setOutputFormat('keyPoints')}>
+                            🎯 Poin Penting
+                        </Button>
+                        <Button type="button" variant={outputFormat === 'questions' ? 'default' : 'outline'} onClick={() => setOutputFormat('questions')}>
+                            ❓ Pertanyaan
+                        </Button>
+                        <Button type="button" variant={outputFormat === 'contentIdeas' ? 'default' : 'outline'} onClick={() => setOutputFormat('contentIdeas')}>
+                            💡 Ide Konten
+                        </Button>
+                    </div>
+                </div>
+                <div className="space-y-2">
+                    <Label className="text-base font-semibold">Bahasa Output</Label>
+                    <div className="flex flex-wrap items-center gap-2">
+                        <Button type="button" variant={outputLanguage === 'indonesian' ? 'default' : 'outline'} onClick={() => setOutputLanguage('indonesian')}>
+                            Indonesia
+                        </Button>
+                        <Button type="button" variant={outputLanguage === 'english' ? 'default' : 'outline'} onClick={() => setOutputLanguage('english')}>
+                            Inggris
+                        </Button>
+                        <Button type="button" variant={outputLanguage === 'arabic' ? 'default' : 'outline'} onClick={() => setOutputLanguage('arabic')}>
+                            Arab
+                        </Button>
+                    </div>
+                </div>
             </div>
 
             <div className="flex justify-end">
